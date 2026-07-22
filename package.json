@@ -1,0 +1,11 @@
+{
+  "name": "nexfra-mfg-website-erp",
+  "version": "1.0.0",
+  "description": "Nexfra Manufacturing Website & Internal ERP System",
+  "scripts": {
+    "dev": "vite"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0"
+  }
+}
