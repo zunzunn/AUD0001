@@ -2308,3 +2308,446 @@ textarea.form-control {
     padding: 24px;
   }
 }
+
+/* ==========================================
+   ADMIN TOP BAR LAYOUT & ALIGNMENTS
+   ========================================== */
+.admin-top-bar {
+  background-color: #111827;
+  color: #FFFFFF;
+  height: 45px;
+  display: flex;
+  align-items: center;
+  border-bottom: 1.5px solid var(--color-accent);
+  font-size: 0.8rem;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 200; /* Must sit above everything else */
+}
+
+.admin-bar-container {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.admin-status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.admin-status .pulse-indicator {
+  width: 8px;
+  height: 8px;
+  background-color: var(--color-primary);
+  border-radius: 50%;
+  animation: pulseGreen 2s infinite;
+}
+
+.admin-nav-links {
+  display: flex;
+  gap: 24px;
+}
+
+.admin-bar-link {
+  color: #9CA3AF;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: var(--transition-fast);
+}
+
+.admin-bar-link:hover {
+  color: var(--color-accent);
+}
+
+#admin-logout-btn {
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #FFFFFF;
+  padding: 4px 10px;
+  font-size: 0.7rem;
+}
+
+#admin-logout-btn:hover {
+  background-color: var(--color-danger);
+  border-color: var(--color-danger);
+  color: #FFFFFF;
+}
+
+/* Shift down page layout when logged in */
+body.admin-logged-in .main-header {
+  top: 45px;
+}
+
+body.admin-logged-in .hero-section {
+  padding-top: calc(var(--header-height) + 85px);
+}
+
+/* ==========================================
+   PDF PREVIEW MODAL & A4 RENDER STYLES
+   ========================================== */
+.pdf-modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.65);
+  z-index: 1000;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+.pdf-modal.active {
+  display: flex;
+}
+
+.pdf-modal-container {
+  background-color: #374151;
+  width: 90%;
+  max-width: 900px;
+  height: 90%;
+  display: flex;
+  flex-direction: column;
+  box-shadow: var(--shadow-lg);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.pdf-modal-toolbar {
+  background-color: #1F2937;
+  color: #FFFFFF;
+  padding: 12px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1.5px solid var(--color-accent);
+  flex-shrink: 0;
+}
+
+.pdf-modal-toolbar h3 {
+  color: #FFFFFF;
+  font-size: 0.95rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.pdf-modal-content {
+  flex-grow: 1;
+  overflow-y: auto;
+  padding: 30px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  background-color: #4B5563;
+}
+
+/* A4 Sheet styling */
+.pdf-page {
+  background-color: #FFFFFF;
+  color: #000000;
+  width: 790px; /* A4 width proportion */
+  min-height: 1118px; /* A4 height proportion */
+  padding: 50px 40px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  font-family: Arial, sans-serif; /* Standard PDF text font */
+  box-sizing: border-box;
+}
+
+/* Header style within PDF */
+.pdf-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 5px;
+}
+
+.pdf-header-logo {
+  flex-shrink: 0;
+}
+
+.pdf-header-text {
+  text-align: center;
+  flex-grow: 1;
+  padding: 0 10px;
+}
+
+.pdf-header-text h2 {
+  font-family: Arial, Helvetica, sans-serif;
+  color: #1E7D32 !important; /* Nexfra Green */
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin-bottom: 4px;
+  letter-spacing: -0.5px;
+}
+
+.pdf-header-text p {
+  font-size: 0.65rem;
+  color: #374151;
+  line-height: 1.3;
+}
+
+.pdf-header-iso {
+  flex-shrink: 0;
+}
+
+.pdf-header-line {
+  height: 3px;
+  background-color: #1E3A8A; /* Thick blue line */
+  width: 100%;
+  margin-bottom: 20px;
+}
+
+/* PDF document body styles */
+.pdf-meta-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  font-weight: bold;
+  margin-bottom: 16px;
+  font-family: Arial, sans-serif;
+}
+
+.pdf-recipient {
+  font-size: 0.85rem;
+  margin-bottom: 20px;
+  line-height: 1.4;
+  font-family: Arial, sans-serif;
+}
+
+.pdf-recipient strong {
+  display: block;
+  font-size: 0.9rem;
+  margin-bottom: 4px;
+}
+
+.pdf-subject {
+  font-size: 0.85rem;
+  font-weight: bold;
+  margin-bottom: 16px;
+  text-decoration: underline;
+  line-height: 1.4;
+  font-family: Arial, sans-serif;
+}
+
+.pdf-salutation {
+  font-size: 0.85rem;
+  margin-bottom: 12px;
+  font-family: Arial, sans-serif;
+}
+
+.pdf-intro-text {
+  font-size: 0.85rem;
+  margin-bottom: 16px;
+  font-family: Arial, sans-serif;
+}
+
+/* PDF main Quotation table styling */
+.pdf-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 16px;
+  font-size: 0.8rem;
+  font-family: Arial, sans-serif;
+}
+
+.pdf-table th, .pdf-table td {
+  border: 1px solid #000000 !important;
+  padding: 8px 10px;
+  vertical-align: top;
+  background-color: transparent !important;
+  color: #000000 !important;
+}
+
+.pdf-table th {
+  text-align: center;
+  font-weight: bold;
+  color: #2563EB !important; /* Blue headers */
+  text-decoration: underline;
+}
+
+.pdf-table td.desc-col {
+  width: 45%;
+  font-weight: bold;
+}
+
+.pdf-table td.qty-col {
+  width: 15%;
+  text-align: center;
+  color: #DC2626 !important; /* Red bold */
+  font-weight: bold;
+}
+
+.pdf-table td.rate-col, .pdf-table td.total-col {
+  width: 20%;
+  text-align: right;
+  font-weight: bold;
+}
+
+.pdf-table td.total-row-label {
+  text-align: left;
+  font-weight: bold;
+  color: #2563EB !important;
+  text-decoration: none !important;
+}
+
+.pdf-table td.total-row-val {
+  text-align: right;
+  font-weight: bold;
+  color: #2563EB !important;
+  text-decoration: none !important;
+}
+
+.pdf-amount-words {
+  font-size: 0.85rem;
+  font-weight: bold;
+  margin-bottom: 24px;
+  font-family: Arial, sans-serif;
+}
+
+.pdf-amount-words span {
+  text-decoration: underline;
+  color: #2563EB;
+}
+
+/* Specifications list box */
+.pdf-specs-section h3 {
+  font-size: 0.9rem;
+  color: #DC2626 !important; /* Red */
+  text-decoration: underline;
+  margin-bottom: 8px;
+  font-family: Arial, sans-serif;
+}
+
+.pdf-specs-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.775rem;
+  font-family: Arial, sans-serif;
+}
+
+.pdf-specs-table td {
+  border: 1px solid #9CA3AF !important;
+  padding: 5px 8px;
+  color: #000000 !important;
+  background-color: transparent !important;
+}
+
+.pdf-specs-table tr td:first-child {
+  width: 40px;
+  text-align: center;
+  font-weight: bold;
+}
+
+/* Page 2 specifics */
+.pdf-section-title {
+  font-size: 0.9rem;
+  color: #DC2626 !important; /* Red */
+  font-weight: bold;
+  margin-bottom: 6px;
+  margin-top: 16px;
+  font-family: Arial, sans-serif;
+}
+
+.pdf-text-block {
+  font-size: 0.8rem;
+  margin-bottom: 12px;
+  font-family: Arial, sans-serif;
+}
+
+.pdf-list {
+  font-size: 0.8rem;
+  margin-bottom: 16px;
+  padding-left: 20px;
+  list-style-type: decimal;
+  font-family: Arial, sans-serif;
+}
+
+.pdf-list li {
+  margin-bottom: 6px;
+  line-height: 1.4;
+}
+
+.pdf-bank-details {
+  background-color: #F9FAFB !important;
+  border: 1px solid #D1D5DB !important;
+  padding: 16px;
+  font-size: 0.8rem;
+  margin-bottom: 24px;
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 8px;
+  font-family: Arial, sans-serif;
+  color: #000000 !important;
+}
+
+.pdf-bank-details div {
+  font-weight: bold;
+}
+
+.pdf-signoff {
+  margin-top: auto;
+  font-size: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  font-family: Arial, sans-serif;
+  color: #000000 !important;
+}
+
+.pdf-bottom-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 6px;
+  background-color: #FBBF24; /* Yellow footer line */
+}
+
+/* Print CSS to ensure A4 rendering hides other elements */
+@media print {
+  body {
+    background-color: #FFFFFF !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+  .main-header, .admin-top-bar, .erp-portal-container, .erp-dashboard-layout, .pdf-modal-toolbar, .pdf-modal-content {
+    display: none !important;
+  }
+  .pdf-modal {
+    position: static !important;
+    background-color: transparent !important;
+    display: block !important;
+  }
+  .pdf-modal-container {
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    overflow: visible !important;
+    background-color: transparent !important;
+  }
+  .pdf-modal-content {
+    background-color: transparent !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+  .pdf-page {
+    box-shadow: none !important;
+    margin: 0 !important;
+    page-break-after: always !important;
+  }
+  .pdf-page:last-child {
+    page-break-after: avoid !important;
+  }
+}

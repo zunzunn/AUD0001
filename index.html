@@ -20,6 +20,23 @@
 </head>
 <body>
 
+  <!-- Admin Portal Top Navigation Bar (Visible only when logged in) -->
+  <div class="admin-top-bar" id="admin-top-bar" style="display: none;">
+    <div class="container admin-bar-container">
+      <div class="admin-status">
+        <span class="pulse-indicator"></span>
+        <span><strong>NEXFRA CONTROL HUB</strong> (Administrator)</span>
+      </div>
+      <nav class="admin-nav-links">
+        <a href="erp.html?module=dashboard" target="_blank" class="admin-bar-link">Overview</a>
+        <a href="erp.html?module=quotations" target="_blank" class="admin-bar-link">Sales & Quotes</a>
+        <a href="erp.html?module=status" target="_blank" class="admin-bar-link">Production Board</a>
+        <a href="erp.html?module=accounts" target="_blank" class="admin-bar-link">Finance Ledger</a>
+      </nav>
+      <button class="btn btn-outline btn-xs" id="admin-logout-btn">Logout</button>
+    </div>
+  </div>
+
   <!-- Navigation Bar -->
   <header class="main-header">
     <div class="container header-container">
@@ -529,579 +546,38 @@
   </footer>
 
   <!-- ========================================== -->
-  <!-- INTERNAL ERP SYSTEM PORTAL (MODAL WRAPPER) -->
+  <!-- ADMINISTRATOR LOGIN MODAL -->
   <!-- ========================================== -->
   <div class="erp-portal-container" id="erp-portal">
-    <!-- Portal Header -->
     <header class="portal-header">
       <div class="portal-logo">
-        <span class="logo-accent">NEX</span>FRA <span class="portal-badge">ERP v2.1</span>
-      </div>
-      <div class="portal-user-profile" id="user-profile-header" style="display:none;">
-        <div class="user-info">
-          <span class="user-name" id="profile-name">Admin User</span>
-          <span class="user-role" id="profile-role">System Admin</span>
-        </div>
-        <div class="user-avatar" id="profile-avatar">A</div>
-        <button class="btn-logout" id="portal-logout-btn" title="Logout">
-          <svg class="icon-sm" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
-        </button>
+        <span class="logo-accent">NEX</span>FRA <span class="portal-badge">ADMIN PORTAL</span>
       </div>
       <button class="close-portal-btn" id="close-portal-btn" aria-label="Exit Portal">
         <svg class="close-icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </header>
 
-    <!-- Portal Body containing Login or Dashboard -->
     <div class="portal-body">
-      
-      <!-- 1. LOGIN SCREEN -->
       <div class="portal-login-screen" id="portal-login-screen">
-        <div class="login-card">
+        <div class="login-card" style="max-width: 460px;">
           <div class="login-header">
-            <h2>Employee Sign In</h2>
-            <p>Access the Nexfra internal operating system. Choose your department profile to run the simulated modules.</p>
+            <h2>Administrator Sign In</h2>
+            <p>Access the Nexfra internal operating system to manage Sales, Production, Accounts, and System Pricing.</p>
           </div>
-          
-          <div class="department-grid">
-            <div class="dept-select-card active" data-role="Admin">
-              <div class="dept-icon">
-                <svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-              </div>
-              <h3>Administrator</h3>
-              <p>Full operations access, template editing & user logs</p>
-            </div>
-            
-            <div class="dept-select-card" data-role="Sales">
-              <div class="dept-icon">
-                <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-              </div>
-              <h3>Sales & Estimation</h3>
-              <p>Create quotations, build custom templates, customer list</p>
-            </div>
-
-            <div class="dept-select-card" data-role="Production">
-              <div class="dept-icon">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83 2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-              </div>
-              <h3>Production Floor</h3>
-              <p>Work order queue, stage advancement & quality checklist</p>
-            </div>
-
-            <div class="dept-select-card" data-role="Accounts">
-              <div class="dept-icon">
-                <svg viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-              </div>
-              <h3>Accounts & Finance</h3>
-              <p>Payment logs, balance calculation, billing reports</p>
-            </div>
-          </div>
-          
           <form class="login-form" id="portal-login-form">
-            <input type="hidden" id="login-role-val" value="Admin">
             <div class="form-group">
-              <label for="login-email">Employee ID / Email</label>
+              <label for="login-email">Admin ID / Email</label>
               <input type="text" id="login-email" class="form-control" value="admin@nexframfg.com" required>
             </div>
             <div class="form-group">
               <label for="login-password">Access Password</label>
               <input type="password" id="login-password" class="form-control" value="••••••••" required>
             </div>
-            <button type="submit" class="btn btn-primary w-full btn-lg">Launch ERP Dashboard</button>
+            <button type="submit" class="btn btn-primary w-full btn-lg">Launch Admin Portal</button>
           </form>
         </div>
       </div>
-
-      <!-- 2. ERP CORE DASHBOARD LAYOUT -->
-      <div class="erp-dashboard-layout" id="erp-dashboard-layout" style="display:none;">
-        <!-- Left Sidebar Navigation -->
-        <aside class="dashboard-sidebar">
-          <nav class="sidebar-nav">
-            <a href="#" class="sidebar-link active" data-module="dashboard">
-              <svg class="sidebar-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-              Dashboard
-            </a>
-            <a href="#" class="sidebar-link" data-module="sales" id="nav-sales">
-              <svg class="sidebar-icon" viewBox="0 0 24 24"><path d="M21.21 15.89A10 10 0 1 1 8 2.83M22 12A10 10 0 0 0 12 2v10z"/></svg>
-              Sales Overview
-            </a>
-            <a href="#" class="sidebar-link" data-module="quotations" id="nav-quotations">
-              <svg class="sidebar-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-              Quotation Builder
-            </a>
-            <a href="#" class="sidebar-link" data-module="workorders" id="nav-workorders">
-              <svg class="sidebar-icon" viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
-              Work Orders
-            </a>
-            <a href="#" class="sidebar-link" data-module="status" id="nav-status">
-              <svg class="sidebar-icon" viewBox="0 0 24 24"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
-              Production Status
-            </a>
-            <a href="#" class="sidebar-link" data-module="accounts" id="nav-accounts">
-              <svg class="sidebar-icon" viewBox="0 0 24 24"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
-              Accounts & Payments
-            </a>
-            <a href="#" class="sidebar-link" data-module="customers" id="nav-customers">
-              <svg class="sidebar-icon" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-              Customer Directory
-            </a>
-            <a href="#" class="sidebar-link" data-module="admin" id="nav-admin">
-              <svg class="sidebar-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33a1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09"/></svg>
-              Admin Config
-            </a>
-          </nav>
-        </aside>
-
-        <!-- Main Dashboard View Panel -->
-        <main class="dashboard-viewport">
-          
-          <!-- MODULE: OVERVIEW DASHBOARD -->
-          <div class="module-view active" id="view-dashboard">
-            <div class="module-header">
-              <div>
-                <h1>Operational Overview</h1>
-                <p>Welcome to Nexfra Heavy Engineering Operating System. Here is today's factory activity.</p>
-              </div>
-              <div class="header-indicator">
-                <span class="pulse-indicator"></span>
-                <span>Live Factory Connection</span>
-              </div>
-            </div>
-            
-            <div class="grid grid-4-col gap-md mb-lg">
-              <div class="kpi-card">
-                <span class="kpi-label">Active Work Orders</span>
-                <span class="kpi-value" id="kpi-active-wo">4</span>
-                <span class="kpi-trend trend-neutral">In Shop Floor</span>
-              </div>
-              <div class="kpi-card">
-                <span class="kpi-label">Quotations Pending</span>
-                <span class="kpi-value" id="kpi-pending-quotes">3</span>
-                <span class="kpi-trend trend-up">Avg. ₹12.4L</span>
-              </div>
-              <div class="kpi-card">
-                <span class="kpi-label">Monthly Billing</span>
-                <span class="kpi-value">₹48,20,000</span>
-                <span class="kpi-trend trend-up">+14% vs June</span>
-              </div>
-              <div class="kpi-card">
-                <span class="kpi-label">Accounts Receivable</span>
-                <span class="kpi-value" id="kpi-receivable">₹18,50,000</span>
-                <span class="kpi-trend trend-down">Pending Balance</span>
-              </div>
-            </div>
-
-            <div class="grid grid-2-col gap-lg">
-              <!-- Active Production Stage Progress Summary -->
-              <div class="card">
-                <div class="card-header">
-                  <h3>Chassis Work-Order Flow</h3>
-                  <a href="#" class="btn btn-outline btn-xs" id="quick-jump-production">Go to Production</a>
-                </div>
-                <div class="dashboard-wo-list" id="dash-wo-summary">
-                  <!-- Injected by JavaScript -->
-                </div>
-              </div>
-              
-              <!-- Quick Actions and Logs -->
-              <div class="card">
-                <div class="card-header">
-                  <h3>Quick Operation Shortcuts</h3>
-                </div>
-                <div class="shortcut-grid mb-lg">
-                  <button class="btn btn-outline shortcut-btn" id="dash-btn-new-quote">
-                    <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><line x1="9" y1="15" x2="15" y2="15"/></svg>
-                    New Quote
-                  </button>
-                  <button class="btn btn-outline shortcut-btn" id="dash-btn-payments">
-                    <svg viewBox="0 0 24 24"><rect x="2" y="4" width="20" height="16" rx="2"/><line x1="12" y1="10" x2="12" y2="10"/><path d="M8 14h8"/></svg>
-                    Log Payment
-                  </button>
-                  <button class="btn btn-outline shortcut-btn" id="dash-btn-templates">
-                    <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33a1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09"/></svg>
-                    Edit Prices
-                  </button>
-                </div>
-                
-                <div class="system-logs">
-                  <h4>Recent Operations Log</h4>
-                  <ul class="log-list" id="system-log-list">
-                    <!-- Injected by JavaScript -->
-                  </ul>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- MODULE: SALES OVERVIEW -->
-          <div class="module-view" id="view-sales">
-            <div class="module-header">
-              <div>
-                <h1>Sales History Ledger</h1>
-                <p>Completed sales orders and dispatched vehicles.</p>
-              </div>
-            </div>
-            
-            <div class="table-actions">
-              <div class="search-wrap">
-                <input type="text" id="sales-search-input" class="form-control form-control-sm" placeholder="Search Customer, Product, Invoice...">
-              </div>
-              <div class="filter-wrap">
-                <select id="sales-filter-product" class="form-control form-control-sm">
-                  <option value="all">All Products</option>
-                  <option value="Flat Bed Trailer">Flat Bed Trailer</option>
-                  <option value="Tip Trailer">Tip Trailer</option>
-                  <option value="Box Body Tipper">Box Body Tipper</option>
-                  <option value="Rock Body Tipper">Rock Body Tipper</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="table-container">
-              <table class="data-table" id="sales-table">
-                <thead>
-                  <tr>
-                    <th>Invoice ID</th>
-                    <th>Customer</th>
-                    <th>Product Configuration</th>
-                    <th>Order Date</th>
-                    <th>Amount</th>
-                    <th>Payment Status</th>
-                    <th>Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <!-- Injected by JS -->
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- MODULE: QUOTATION BUILDER -->
-          <div class="module-view" id="view-quotations">
-            <div class="module-header">
-              <div>
-                <h1>Custom Quotation & Estimation Builder</h1>
-                <p>Draft quotations using dynamic templates. All spec differentials adjust pricing in real-time.</p>
-              </div>
-            </div>
-            
-            <div class="grid grid-3-2-col gap-lg">
-              
-              <!-- Left: Configuration Form -->
-              <div class="card">
-                <form id="quote-builder-form">
-                  <div class="form-section">
-                    <h3>1. Customer Details</h3>
-                    <div class="form-group mb-sm">
-                      <label for="quote-cust-select">Select Existing Customer (or create new below)</label>
-                      <select id="quote-cust-select" class="form-control">
-                        <!-- Injected by JS -->
-                      </select>
-                    </div>
-                    <div class="grid grid-2-col gap-md">
-                      <div class="form-group">
-                        <label for="quote-cust-name">Company/Customer Name</label>
-                        <input type="text" id="quote-cust-name" class="form-control" required>
-                      </div>
-                      <div class="form-group">
-                        <label for="quote-cust-gst">GST Number</label>
-                        <input type="text" id="quote-cust-gst" class="form-control" placeholder="33AAAAA1111A1Z1">
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="form-section">
-                    <h3>2. Select Base Product & Template</h3>
-                    <div class="grid grid-2-col gap-md">
-                      <div class="form-group">
-                        <label for="quote-product-select">Product Family</label>
-                        <select id="quote-product-select" class="form-control">
-                          <option value="flatbed">Flat Bed Trailer</option>
-                          <option value="tiptrailer">Tip Trailer</option>
-                          <option value="boxbody">Box Body Tipper</option>
-                          <option value="rockbody">Rock Body Tipper</option>
-                        </select>
-                      </div>
-                      <div class="form-group">
-                        <label for="quote-template-select">Template Profile</label>
-                        <select id="quote-template-select" class="form-control">
-                          <!-- Injected by JS -->
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div class="form-section">
-                    <h3>3. Dynamic Technical Specifications</h3>
-                    <p class="section-hint mb-md">Select options below. Pricing updates automatically based on raw material differences.</p>
-                    <div class="specs-parameters-grid" id="quote-specs-container">
-                      <!-- Injected dynamically by JS based on product selection -->
-                    </div>
-                  </div>
-
-                  <div class="form-section">
-                    <h3>4. Accessories & Custom Add-ons</h3>
-                    <div class="custom-items-container" id="quote-custom-items-list">
-                      <!-- Injected by JS -->
-                    </div>
-                    <button type="button" class="btn btn-outline btn-sm mt-sm" id="btn-add-custom-item">
-                      <svg class="icon-sm" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-                      Add Custom Item (Winch, GPS, ramps, branding...)
-                    </button>
-                  </div>
-                </form>
-              </div>
-
-              <!-- Right: Live Estimation sheet & PDF Preview -->
-              <div class="quote-preview-sticky">
-                <div class="preview-card">
-                  <div class="preview-header">
-                    <h4>ESTIMATION SUMMARY</h4>
-                    <span class="preview-status">DRAFT</span>
-                  </div>
-                  
-                  <div class="preview-body" id="quote-summary-sheet">
-                    <!-- Dynamic live values injected by JS -->
-                  </div>
-
-                  <div class="preview-footer">
-                    <button type="button" class="btn btn-outline w-full mb-sm" id="btn-save-draft">
-                      Save Quote Draft
-                    </button>
-                    <button type="button" class="btn btn-primary w-full btn-lg" id="btn-approve-quote">
-                      <svg class="icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
-                      Approve & Generate Work Order
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-          <!-- MODULE: WORK ORDERS -->
-          <div class="module-view" id="view-workorders">
-            <div class="module-header">
-              <div>
-                <h1>Internal Work Orders Queue</h1>
-                <p>Factory-facing chassis blueprints and material release authorizations.</p>
-              </div>
-            </div>
-
-            <div class="grid grid-workorders" id="workorders-container">
-              <!-- Injected by JS -->
-            </div>
-          </div>
-
-          <!-- MODULE: PRODUCTION STATUS -->
-          <div class="module-view" id="view-status">
-            <div class="module-header">
-              <div>
-                <h1>Shop Floor Production Board</h1>
-                <p>Track trailer framing, welding, robotic sandblasting, structural coating, and QA clearances.</p>
-              </div>
-            </div>
-            
-            <div class="board-container" id="production-board-container">
-              <!-- Injected by JS -->
-            </div>
-          </div>
-
-          <!-- MODULE: ACCOUNTS & PAYMENTS -->
-          <div class="module-view" id="view-accounts">
-            <div class="module-header">
-              <div>
-                <h1>Payment Ledger & Balance Tracking</h1>
-                <p>Track advances, intermediate RTGS transfers, and pending balances prior to vehicle clearance.</p>
-              </div>
-            </div>
-
-            <div class="grid grid-3-2-col gap-lg">
-              
-              <!-- Ledger Table -->
-              <div class="card">
-                <div class="card-header">
-                  <h3>Customer Receivables Accounts</h3>
-                </div>
-                <div class="table-container">
-                  <table class="data-table" id="accounts-ledger-table">
-                    <thead>
-                      <tr>
-                        <th>Order ID</th>
-                        <th>Customer</th>
-                        <th>Total Amount</th>
-                        <th>Total Paid</th>
-                        <th>Outstanding Balance</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      <!-- Injected by JS -->
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              <!-- Payment Logging Form -->
-              <div class="card">
-                <div class="card-header">
-                  <h3>Log Incoming Payment</h3>
-                </div>
-                <form id="payment-log-form">
-                  <div class="form-group">
-                    <label for="pay-order-select">Select Active Order</label>
-                    <select id="pay-order-select" class="form-control" required>
-                      <!-- Injected by JS -->
-                    </select>
-                  </div>
-                  <div class="grid grid-2-col gap-md">
-                    <div class="form-group">
-                      <label for="pay-amount">Amount Received (₹)</label>
-                      <input type="number" id="pay-amount" class="form-control" placeholder="100000" required min="1">
-                    </div>
-                    <div class="form-group">
-                      <label for="pay-mode">Payment Mode</label>
-                      <select id="pay-mode" class="form-control" required>
-                        <option value="RTGS">RTGS Transfer</option>
-                        <option value="NEFT">NEFT Transfer</option>
-                        <option value="Cheque">Cheque Deposit</option>
-                        <option value="Cash">Cash Receipt</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div class="form-group">
-                    <label for="pay-reference">Transaction ID / Reference Number</label>
-                    <input type="text" id="pay-reference" class="form-control" placeholder="TXN8271829128" required>
-                  </div>
-                  <button type="submit" class="btn btn-primary w-full">Record Payment</button>
-                </form>
-                
-                <div class="payment-history-panel mt-lg">
-                  <h4>Transaction Logs</h4>
-                  <ul class="transaction-log-list" id="payment-history-list">
-                    <!-- Injected by JS -->
-                  </ul>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-          <!-- MODULE: CUSTOMER DIRECTORY -->
-          <div class="module-view" id="view-customers">
-            <div class="module-header">
-              <div>
-                <h1>Client Accounts Registry</h1>
-                <p>Verified companies, contact info, and registered commercial vehicle chassis allocations.</p>
-              </div>
-            </div>
-
-            <div class="table-container">
-              <table class="data-table" id="customers-table">
-                <thead>
-                  <tr>
-                    <th>Company Name</th>
-                    <th>GSTIN</th>
-                    <th>Primary Contact</th>
-                    <th>Registered Address</th>
-                    <th>Registered Vehicles</th>
-                    <th>Outstanding Balance</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <!-- Injected by JS -->
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          <!-- MODULE: ADMIN CONFIG -->
-          <div class="module-view" id="view-admin">
-            <div class="module-header">
-              <div>
-                <h1>System Configurations & Templates</h1>
-                <p>Configure default technical parameters, baseline trailer templates, pricing matrices, and employee logs.</p>
-              </div>
-            </div>
-
-            <div class="grid grid-2-col gap-lg">
-              
-              <!-- Pricing Matrix Edit -->
-              <div class="card">
-                <div class="card-header">
-                  <h3>Raw Material Price Differentials</h3>
-                </div>
-                <p class="section-hint mb-md">Updates here instantly reflect in real-time calculations for any quotation builder drafts.</p>
-                
-                <form id="admin-pricing-form">
-                  <div class="admin-matrix-section">
-                    <h4>Floor Thickness Upgrade (Base: 8mm MS)</h4>
-                    <div class="grid grid-2-col gap-md items-center mb-sm">
-                      <label>6mm MS (Discount):</label>
-                      <input type="number" id="admin-p-floor-6" class="form-control form-control-sm" value="-15000">
-                    </div>
-                    <div class="grid grid-2-col gap-md items-center mb-sm">
-                      <label>10mm MS Upgrade:</label>
-                      <input type="number" id="admin-p-floor-10" class="form-control form-control-sm" value="30000">
-                    </div>
-                  </div>
-
-                  <div class="admin-matrix-section mt-md">
-                    <h4>Structure / Plate Grade (Base: ST52 Steel)</h4>
-                    <div class="grid grid-2-col gap-md items-center mb-sm">
-                      <label>Hardox 450 Upgrade:</label>
-                      <input type="number" id="admin-p-steel-hardox" class="form-control form-control-sm" value="150000">
-                    </div>
-                  </div>
-
-                  <div class="admin-matrix-section mt-md">
-                    <h4>Axle Configurations (Base: 3x13T Axles)</h4>
-                    <div class="grid grid-2-col gap-md items-center mb-sm">
-                      <label>2x13T (Discount):</label>
-                      <input type="number" id="admin-p-axle-2" class="form-control form-control-sm" value="-100000">
-                    </div>
-                    <div class="grid grid-2-col gap-md items-center mb-sm">
-                      <label>3x16T Heavy Axles:</label>
-                      <input type="number" id="admin-p-axle-3-16" class="form-control form-control-sm" value="80000">
-                    </div>
-                  </div>
-
-                  <button type="submit" class="btn btn-primary w-full mt-lg">Update System Pricing Matrix</button>
-                </form>
-              </div>
-
-              <!-- Roles & User Audit log -->
-              <div class="card">
-                <div class="card-header">
-                  <h3>Active Sessions & Auditing</h3>
-                </div>
-                <div class="user-sessions-panel mb-lg">
-                  <h4>Authorized Roles Directory</h4>
-                  <ul class="role-directories">
-                    <li><strong>Admin:</strong> admin@nexframfg.com (Full clearance)</li>
-                    <li><strong>Sales:</strong> sales@nexframfg.com (Quotations, Leads)</li>
-                    <li><strong>Production:</strong> shopfloor@nexframfg.com (Status board, Work orders)</li>
-                    <li><strong>Accounts:</strong> finance@nexframfg.com (Payment tracking, ledger)</li>
-                  </ul>
-                </div>
-                <div class="system-audits">
-                  <h4>Administrative Actions Audit</h4>
-                  <ul class="audit-list" id="admin-audit-logs">
-                    <li><span class="audit-time">10:42 AM</span> Admin updated baseline pricing matrix coefficients.</li>
-                    <li><span class="audit-time">09:15 AM</span> Sales approved Quote #2026-002 for Tata Logistics.</li>
-                    <li><span class="audit-time">08:00 AM</span> System synchronized database instances (4 active modules).</li>
-                  </ul>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-        </main>
-      </div>
-
     </div>
   </div>
 
