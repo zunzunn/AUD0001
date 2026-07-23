@@ -150,22 +150,56 @@ const DEFAULT_STATE = {
   }
 };
 
+function syncStateCalculations(s) {
+  if (!s || !s.sales || !s.payments || !s.customers) return;
+
+  s.sales.forEach(sale => {
+    const totalPaid = s.payments
+      .filter(p => p.invoiceId === sale.invoiceId)
+      .reduce((sum, p) => sum + p.amount, 0);
+    const balance = Math.max(0, sale.amount - totalPaid);
+    
+    if (balance <= 0) {
+      sale.status = 'Paid';
+    } else if (totalPaid > 0) {
+      sale.status = 'Partial';
+    } else {
+      sale.status = 'Pending';
+    }
+  });
+
+  s.customers.forEach(cust => {
+    const custSales = s.sales.filter(sale => sale.customerName === cust.company);
+    let due = 0;
+    custSales.forEach(sale => {
+      const totalPaid = s.payments
+        .filter(p => p.invoiceId === sale.invoiceId)
+        .reduce((sum, p) => sum + p.amount, 0);
+      due += Math.max(0, sale.amount - totalPaid);
+    });
+    cust.outstanding = due;
+  });
+}
+
 function loadState() {
   const saved = localStorage.getItem('NEXFRA_ERP_STATE');
+  let st = DEFAULT_STATE;
   if (saved) {
     try {
-      return JSON.parse(saved);
+      st = JSON.parse(saved);
     } catch(e) {
       console.error("Failed to parse state, using defaults.", e);
     }
   }
-  localStorage.setItem('NEXFRA_ERP_STATE', JSON.stringify(DEFAULT_STATE));
-  return DEFAULT_STATE;
+  syncStateCalculations(st);
+  localStorage.setItem('NEXFRA_ERP_STATE', JSON.stringify(st));
+  return st;
 }
 
 let STATE = loadState();
 
 function saveState() {
+  syncStateCalculations(STATE);
   localStorage.setItem('NEXFRA_ERP_STATE', JSON.stringify(STATE));
 }
 

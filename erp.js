@@ -123,34 +123,86 @@ const WIZARD_PRODUCT_TEMPLATES = {
     ]
   },
   rigid28: {
-    name: "28 Feet Load Body",
+    name: "28 Feet Rigid Load Body",
     basePrice: 380000,
     dimensions: { length: "28 Feet", height: "4.0 Feet", width: "98 Inches" },
     specs: [
-      { id: "floor", name: "Floor Plate Type", section: "material", type: "dropdown", options: ["3mm MS Chequered", "4mm MS Plain", "Custom"], defaultValue: "3mm MS Chequered", priceDiffs: { "3mm MS Chequered": 0, "4mm MS Plain": 18000, "Custom": 30000 } },
-      { id: "side_panel", name: "Side Panel Height", section: "material", type: "dropdown", options: ["4 Feet MS", "5 Feet MS", "Custom"], defaultValue: "4 Feet MS", priceDiffs: { "4 Feet MS": 0, "5 Feet MS": 20000, "Custom": 35000 } },
-      { id: "painting", name: "Painting Finish", section: "painting", type: "dropdown", options: ["Epoxy Primer + PU Paint", "Epoxy Primer + Epoxy Paint", "Custom"], defaultValue: "Epoxy Primer + PU Paint", priceDiffs: { "Epoxy Primer + PU Paint": 0, "Epoxy Primer + Epoxy Paint": -10000, "Custom": 15000 } },
-      { id: "colour", name: "Body Finish Colour", section: "painting", type: "text", defaultValue: "Royal Blue" }
+      { id: "floor", name: "Floor sheet", section: "material", type: "dropdown", options: ["5mm (St52)", "6mm (St52)", "3mm Chequered", "Custom"], defaultValue: "5mm (St52)", priceDiffs: { "5mm (St52)": 0, "6mm (St52)": 25000, "3mm Chequered": -15000, "Custom": 30000 } },
+      { id: "side_board", name: "Side board sheet", section: "material", type: "dropdown", options: ["3mm (St52)", "4mm (St52)", "Custom"], defaultValue: "3mm (St52)", priceDiffs: { "3mm (St52)": 0, "4mm (St52)": 18000, "Custom": 25000 } },
+      { id: "headboard", name: "Head board sheet", section: "material", type: "dropdown", options: ["3mm (St52)", "4mm (St52)", "Custom"], defaultValue: "3mm (St52)", priceDiffs: { "3mm (St52)": 0, "4mm (St52)": 15000, "Custom": 20000 } },
+      { id: "taildoor", name: "Tail door sheet", section: "material", type: "dropdown", options: ["3mm (St52)", "4mm (St52)", "Custom"], defaultValue: "3mm (St52)", priceDiffs: { "3mm (St52)": 0, "4mm (St52)": 15000, "Custom": 20000 } },
+      { id: "runner", name: "Runner", section: "chassis", type: "dropdown", options: ["ISMC 200 SAIL make", "ISMC 175", "Custom"], defaultValue: "ISMC 200 SAIL make", priceDiffs: { "ISMC 200 SAIL make": 0, "ISMC 175": -10000, "Custom": 15000 } },
+      { id: "cross_members", name: "Side Board Cross members", section: "chassis", type: "text", defaultValue: "12 nos Formed Section Nexfra Standard with Horizontal Stiffener at Center" },
+      { id: "floor_cross", name: "Floor Cross member", section: "chassis", type: "text", defaultValue: "Nexfra Standard" },
+      { id: "painting", name: "Painting", section: "painting", type: "dropdown", options: ["Epoxy primer and PU top coat Nippon paint", "Epoxy primer and Epoxy paint", "Custom"], defaultValue: "Epoxy primer and PU top coat Nippon paint", priceDiffs: { "Epoxy primer and PU top coat Nippon paint": 0, "Epoxy primer and Epoxy paint": -10000, "Custom": 15000 } },
+      { id: "reflective_tape", name: "Reflective tape", section: "accessories", type: "radio", options: ["Yes", "No"], defaultValue: "Yes" },
+      { id: "marker_lamp", name: "Side Marker Lamp", section: "accessories", type: "radio", options: ["Yes", "No"], defaultValue: "Yes" },
+      { id: "supd_rupd", name: "SUPD/RUPD", section: "accessories", type: "radio", options: ["Yes", "No"], defaultValue: "Yes" },
+      { id: "diesel_guard", name: "Diesel Tank Guard", section: "accessories", type: "radio", options: ["Yes", "No"], defaultValue: "Yes" },
+      { id: "foot_rest", name: "Foot Rest on Front Bumper", section: "accessories", type: "radio", options: ["Yes", "No"], defaultValue: "Yes" },
+      { id: "cabin_carrier", name: "Cabin Carrier", section: "accessories", type: "radio", options: ["Yes", "No"], defaultValue: "Yes" }
     ]
   },
   rigid30: {
-    name: "30 Feet Load Body",
+    name: "30 Feet Rigid Load Body",
     basePrice: 420000,
     dimensions: { length: "30 Feet", height: "4.0 Feet", width: "98 Inches" },
     specs: [
-      { id: "floor", name: "Floor Plate Type", section: "material", type: "dropdown", options: ["3mm MS Chequered", "4mm MS Plain", "Custom"], defaultValue: "3mm MS Chequered", priceDiffs: { "3mm MS Chequered": 0, "4mm MS Plain": 18000, "Custom": 30000 } },
-      { id: "side_panel", name: "Side Panel Height", section: "material", type: "dropdown", options: ["4 Feet MS", "5 Feet MS", "Custom"], defaultValue: "4 Feet MS", priceDiffs: { "4 Feet MS": 0, "5 Feet MS": 20000, "Custom": 35000 } },
-      { id: "painting", name: "Painting Finish", section: "painting", type: "dropdown", options: ["Epoxy Primer + PU Paint", "Epoxy Primer + Epoxy Paint", "Custom"], defaultValue: "Epoxy Primer + PU Paint", priceDiffs: { "Epoxy Primer + PU Paint": 0, "Epoxy Primer + Epoxy Paint": -10000, "Custom": 15000 } },
-      { id: "colour", name: "Body Finish Colour", section: "painting", type: "text", defaultValue: "Crimson Red" }
+      { id: "floor", name: "Floor sheet", section: "material", type: "dropdown", options: ["5mm (St52)", "6mm (St52)", "3mm Chequered", "Custom"], defaultValue: "5mm (St52)", priceDiffs: { "5mm (St52)": 0, "6mm (St52)": 25000, "3mm Chequered": -15000, "Custom": 30000 } },
+      { id: "side_board", name: "Side board sheet", section: "material", type: "dropdown", options: ["3mm (St52)", "4mm (St52)", "Custom"], defaultValue: "3mm (St52)", priceDiffs: { "3mm (St52)": 0, "4mm (St52)": 18000, "Custom": 25000 } },
+      { id: "headboard", name: "Head board sheet", section: "material", type: "dropdown", options: ["3mm (St52)", "4mm (St52)", "Custom"], defaultValue: "3mm (St52)", priceDiffs: { "3mm (St52)": 0, "4mm (St52)": 15000, "Custom": 20000 } },
+      { id: "taildoor", name: "Tail door sheet", section: "material", type: "dropdown", options: ["3mm (St52)", "4mm (St52)", "Custom"], defaultValue: "3mm (St52)", priceDiffs: { "3mm (St52)": 0, "4mm (St52)": 15000, "Custom": 20000 } },
+      { id: "runner", name: "Runner", section: "chassis", type: "dropdown", options: ["ISMC 200 SAIL make", "ISMC 175", "Custom"], defaultValue: "ISMC 200 SAIL make", priceDiffs: { "ISMC 200 SAIL make": 0, "ISMC 175": -10000, "Custom": 15000 } },
+      { id: "cross_members", name: "Side Board Cross members", section: "chassis", type: "text", defaultValue: "12 nos Formed Section Nexfra Standard with Horizontal Stiffener at Center" },
+      { id: "floor_cross", name: "Floor Cross member", section: "chassis", type: "text", defaultValue: "Nexfra Standard" },
+      { id: "painting", name: "Painting", section: "painting", type: "dropdown", options: ["Epoxy primer and PU top coat Nippon paint", "Epoxy primer and Epoxy paint", "Custom"], defaultValue: "Epoxy primer and PU top coat Nippon paint", priceDiffs: { "Epoxy primer and PU top coat Nippon paint": 0, "Epoxy primer and Epoxy paint": -10000, "Custom": 15000 } },
+      { id: "reflective_tape", name: "Reflective tape", section: "accessories", type: "radio", options: ["Yes", "No"], defaultValue: "Yes" },
+      { id: "marker_lamp", name: "Side Marker Lamp", section: "accessories", type: "radio", options: ["Yes", "No"], defaultValue: "Yes" },
+      { id: "supd_rupd", name: "SUPD/RUPD", section: "accessories", type: "radio", options: ["Yes", "No"], defaultValue: "Yes" },
+      { id: "diesel_guard", name: "Diesel Tank Guard", section: "accessories", type: "radio", options: ["Yes", "No"], defaultValue: "Yes" },
+      { id: "foot_rest", name: "Foot Rest on Front Bumper", section: "accessories", type: "radio", options: ["Yes", "No"], defaultValue: "Yes" },
+      { id: "cabin_carrier", name: "Cabin Carrier", section: "accessories", type: "radio", options: ["Yes", "No"], defaultValue: "Yes" }
     ]
   }
 };
+
+function syncStateCalculations() {
+  if (!STATE || !STATE.sales || !STATE.payments || !STATE.customers) return;
+
+  STATE.sales.forEach(sale => {
+    const totalPaid = STATE.payments
+      .filter(p => p.invoiceId === sale.invoiceId)
+      .reduce((sum, p) => sum + p.amount, 0);
+    const balance = Math.max(0, sale.amount - totalPaid);
+    
+    if (balance <= 0) {
+      sale.status = 'Paid';
+    } else if (totalPaid > 0) {
+      sale.status = 'Partial';
+    } else {
+      sale.status = 'Pending';
+    }
+  });
+
+  STATE.customers.forEach(cust => {
+    const custSales = STATE.sales.filter(sale => sale.customerName === cust.company);
+    let due = 0;
+    custSales.forEach(sale => {
+      const totalPaid = STATE.payments
+        .filter(p => p.invoiceId === sale.invoiceId)
+        .reduce((sum, p) => sum + p.amount, 0);
+      due += Math.max(0, sale.amount - totalPaid);
+    });
+    cust.outstanding = due;
+  });
+}
 
 function loadState() {
   const saved = localStorage.getItem('NEXFRA_ERP_STATE');
   if (saved) {
     try {
       STATE = JSON.parse(saved);
+      syncStateCalculations();
       return;
     } catch(e) {
       console.error("State loading error, resetting to defaults", e);
@@ -161,6 +213,7 @@ function loadState() {
 }
 
 function saveState() {
+  syncStateCalculations();
   localStorage.setItem('NEXFRA_ERP_STATE', JSON.stringify(STATE));
 }
 
@@ -1198,7 +1251,7 @@ function renderProductionBoard() {
   const container = document.getElementById('production-board-container');
   if (!container) return;
 
-  const boardStages = ['Pending', 'Material Ordered', 'Cutting', 'Fabrication', 'Welding', 'Painting', 'QC', 'Ready'];
+  const boardStages = STAGES.filter(s => s !== 'Delivered');
   let boardHtml = '';
 
   boardStages.forEach(stage => {
@@ -1285,22 +1338,8 @@ function initAccountsModule() {
         ref
       });
 
-      const customer = STATE.customers.find(c => c.company === sale.customerName);
-      if (customer) {
-        customer.outstanding = Math.max(0, customer.outstanding - amount);
-      }
-
-      const totalPaidOnInvoice = STATE.payments
-        .filter(p => p.invoiceId === invoiceId)
-        .reduce((sum, p) => sum + p.amount, 0);
-
-      if (totalPaidOnInvoice >= sale.amount) {
-        sale.status = 'Paid';
-      } else if (totalPaidOnInvoice > 0) {
-        sale.status = 'Partial';
-      }
-
       logSystemActivity(`Logged payment ₹${amount.toLocaleString('en-IN')} for invoice ${invoiceId} via ${mode}.`);
+      saveState();
       alert(`Payment logged successfully. Txn Ref: ${pId}.`);
       
       payForm.reset();
@@ -1318,9 +1357,12 @@ function renderAccountsLedger() {
   if (!tbody) return;
 
   tbody.innerHTML = STATE.sales.map(sale => {
-    const customer = STATE.customers.find(c => c.company === sale.customerName);
-    const balance = customer ? customer.outstanding : 0;
-    const totalPaid = sale.amount - balance;
+    const totalPaid = STATE.payments
+      .filter(p => p.invoiceId === sale.invoiceId)
+      .reduce((sum, p) => sum + p.amount, 0);
+    const balance = Math.max(0, sale.amount - totalPaid);
+    const status = balance <= 0 ? 'Paid' : (totalPaid > 0 ? 'Partial' : 'Pending');
+    const badgeClass = status === 'Paid' ? 'status-paid' : (status === 'Partial' ? 'status-partial' : 'status-pending');
     
     return `
       <tr>
@@ -1328,20 +1370,34 @@ function renderAccountsLedger() {
         <td>${sale.customerName}</td>
         <td style="font-weight:600">₹${sale.amount.toLocaleString('en-IN')}</td>
         <td style="color:var(--color-success);font-weight:600">₹${totalPaid.toLocaleString('en-IN')}</td>
-        <td style="color:var(--color-danger);font-weight:600">₹${balance.toLocaleString('en-IN')}</td>
+        <td style="color:${balance > 0 ? 'var(--color-danger)' : 'var(--color-text-dark)'};font-weight:600">₹${balance.toLocaleString('en-IN')}</td>
         <td>
-          <span class="tbl-status-badge status-${sale.status.toLowerCase()}">${sale.status}</span>
+          <span class="tbl-status-badge ${badgeClass}">${status.toUpperCase()}</span>
         </td>
         <td>
-          <button class="btn btn-outline btn-xs" onclick="populatePaymentDetails('${sale.invoiceId}')">Log Pay</button>
+          ${balance > 0 
+            ? `<button class="btn btn-outline btn-xs" onclick="populatePaymentDetails('${sale.invoiceId}')">Log Pay</button>`
+            : `<span class="tbl-status-badge status-paid" style="font-size:0.7rem;padding:4px 8px;">COMPLETED</span>`
+          }
         </td>
       </tr>
     `;
   }).join('');
 
-  paySelect.innerHTML = STATE.sales.filter(s => s.status !== 'Paid').map(s => `
-    <option value="${s.invoiceId}">${s.invoiceId} - ${s.customerName} (Due: ₹${(s.amount - (STATE.payments.filter(p => p.invoiceId === s.invoiceId).reduce((sum, p) => sum + p.amount, 0))).toLocaleString('en-IN')})</option>
-  `).join('');
+  const unpaidSales = STATE.sales.filter(s => {
+    const paid = STATE.payments.filter(p => p.invoiceId === s.invoiceId).reduce((sum, p) => sum + p.amount, 0);
+    return (s.amount - paid) > 0;
+  });
+
+  if (unpaidSales.length === 0) {
+    paySelect.innerHTML = '<option value="">All Invoices Fully Paid</option>';
+  } else {
+    paySelect.innerHTML = unpaidSales.map(s => {
+      const paid = STATE.payments.filter(p => p.invoiceId === s.invoiceId).reduce((sum, p) => sum + p.amount, 0);
+      const due = s.amount - paid;
+      return `<option value="${s.invoiceId}">${s.invoiceId} - ${s.customerName} (Due: ₹${due.toLocaleString('en-IN')})</option>`;
+    }).join('');
+  }
 
   txnHistoryList.innerHTML = STATE.payments.slice(0, 5).map(txn => {
     const sale = STATE.sales.find(s => s.invoiceId === txn.invoiceId);
