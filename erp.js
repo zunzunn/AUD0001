@@ -1089,8 +1089,9 @@ window.downloadWizardPdf = function() {
     margin:       [0, 0, 0, 0],
     filename:     `NEXFRA_Quotation_${quoteId}.pdf`,
     image:        { type: 'jpeg', quality: 0.98 },
-    html2canvas:  { scale: 2, useCORS: true, letterRendering: true, scrollY: 0 },
-    jsPDF:        { unit: 'pt', format: 'a4', orientation: 'portrait' }
+    html2canvas:  { scale: 2, useCORS: true, letterRendering: false, scrollY: 0 },
+    jsPDF:        { unit: 'pt', format: 'a4', orientation: 'portrait' },
+    pagebreak:    { mode: ['css', 'legacy'] }
   };
   
   if (typeof html2pdf !== 'undefined') {
@@ -1445,8 +1446,9 @@ function downloadPdf(quoteId) {
     margin:       [0, 0, 0, 0],
     filename:     `NEXFRA_Quotation_${quoteId}.pdf`,
     image:        { type: 'jpeg', quality: 0.98 },
-    html2canvas:  { scale: 2, useCORS: true, letterRendering: true, scrollY: 0 },
-    jsPDF:        { unit: 'pt', format: 'a4', orientation: 'portrait' }
+    html2canvas:  { scale: 2, useCORS: true, letterRendering: false, scrollY: 0 },
+    jsPDF:        { unit: 'pt', format: 'a4', orientation: 'portrait' },
+    pagebreak:    { mode: ['css', 'legacy'] }
   };
   
   if (typeof html2pdf !== 'undefined') {

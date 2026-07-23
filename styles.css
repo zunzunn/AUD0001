@@ -2471,8 +2471,15 @@ body.admin-logged-in .hero-section {
   position: relative;
   display: flex;
   flex-direction: column;
-  font-family: Arial, sans-serif; /* Standard PDF text font */
   box-sizing: border-box;
+  page-break-after: always;
+  break-after: page;
+}
+
+.pdf-page, .pdf-page * {
+  font-family: Arial, Helvetica, sans-serif !important;
+  font-variant-ligatures: none !important;
+  letter-spacing: normal !important;
 }
 
 /* Header style within PDF */
