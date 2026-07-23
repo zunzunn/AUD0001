@@ -701,6 +701,19 @@ function loadDefaultSpecsForSubtype(subtypeKey) {
   calculateWizardPricing();
 }
 
+function getEffectiveSpecPriceDiff(spec, opt) {
+  if (!spec || !opt) return 0;
+  let diff = (spec.priceDiffs && spec.priceDiffs[opt] !== undefined) ? spec.priceDiffs[opt] : 0;
+
+  if (spec.id === 'floor' && opt.includes('6mm') && STATE.adminPricing && STATE.adminPricing.floor6 !== undefined) diff = STATE.adminPricing.floor6;
+  if (spec.id === 'floor' && opt.includes('10mm') && STATE.adminPricing && STATE.adminPricing.floor10 !== undefined) diff = STATE.adminPricing.floor10;
+  if (spec.id === 'beam' && opt.includes('Hardox') && STATE.adminPricing && STATE.adminPricing.steelHardox !== undefined) diff = STATE.adminPricing.steelHardox;
+  if (spec.id === 'axles' && opt.includes('2x13T') && STATE.adminPricing && STATE.adminPricing.axle2 !== undefined) diff = STATE.adminPricing.axle2;
+  if (spec.id === 'axles' && opt.includes('3x16T') && STATE.adminPricing && STATE.adminPricing.axle3_16 !== undefined) diff = STATE.adminPricing.axle3_16;
+
+  return diff;
+}
+
 function renderConfiguratorFormInputs(template) {
   const sections = ['material', 'chassis', 'hydraulic', 'painting', 'accessories', 'dimensions'];
   
@@ -723,7 +736,7 @@ function renderConfiguratorFormInputs(template) {
         controlHtml = `
           <select id="w-spec-${spec.id}" class="form-control" onchange="updateSpecValueState('${spec.id}', this.value)">
             ${spec.options.map(opt => {
-              const diff = spec.priceDiffs && spec.priceDiffs[opt] ? spec.priceDiffs[opt] : 0;
+              const diff = getEffectiveSpecPriceDiff(spec, opt);
               return `<option value="${opt}" ${opt === spec.defaultValue ? 'selected' : ''}>
                 ${opt} ${diff !== 0 ? `(${diff > 0 ? '+' : ''}₹${diff.toLocaleString('en-IN')})` : '(Included)'}
               </option>`;
@@ -734,7 +747,7 @@ function renderConfiguratorFormInputs(template) {
         controlHtml = `
           <div class="radio-group">
             ${spec.options.map((opt, i) => {
-              const diff = spec.priceDiffs && spec.priceDiffs[opt] ? spec.priceDiffs[opt] : 0;
+              const diff = getEffectiveSpecPriceDiff(spec, opt);
               return `
                 <label class="radio-label">
                   <input type="radio" name="w-spec-radio-${spec.id}" value="${opt}" ${opt === spec.defaultValue ? 'checked' : ''} onchange="updateSpecValueState('${spec.id}', this.value)">
@@ -845,34 +858,173 @@ window.removeWizardCustomModRow = function(id) {
   }
 };
 
+window.updateManualBasePrice = function(val) {
+  wizardState.customBasePrice = parseFloat(val) || 0;
+  calculateWizardPricing();
+};
+
+window.saveCurrentBasePriceAsDefault = function() {
+  const template = WIZARD_PRODUCT_TEMPLATES[wizardState.subtype];
+  if (!template) return;
+
+  const currentBase = wizardState.customBasePrice !== undefined 
+    ? wizardState.customBasePrice 
+    : template.basePrice;
+
+  if (!STATE.adminPricing) STATE.adminPricing = {};
+  if (!STATE.adminPricing.basePrices) STATE.adminPricing.basePrices = {};
+
+  STATE.adminPricing.basePrices[wizardState.subtype] = currentBase;
+  saveState();
+  logSystemActivity(`Admin set market base price for ${wizardState.subtype} to ₹${currentBase.toLocaleString('en-IN')}.`);
+  alert(`₹${currentBase.toLocaleString('en-IN')} saved as market baseline default price for ${template.name}!`);
+};
+
+window.openPartPricingMatrixModal = function() {
+  const template = WIZARD_PRODUCT_TEMPLATES[wizardState.subtype];
+  if (!template) {
+    alert("Please select a product category & subtype first.");
+    return;
+  }
+
+  const container = document.getElementById('part-pricing-modal-body');
+  if (!container) return;
+
+  let html = `
+    <div style="margin-bottom:16px; padding:12px; background:#EFF6FF; border-left:4px solid #3B82F6; border-radius:6px;">
+      <h4 style="margin:0; font-size:0.85rem; color:#1E40AF;">Managing Component Part Prices for: <strong>${template.name}</strong></h4>
+      <p style="margin:4px 0 0 0; font-size:0.75rem; color:#1D4ED8;">Adjust the price differential (₹) for each customization option. Positive values add cost (+), negative values give a discount (-).</p>
+    </div>
+
+    <div style="margin-bottom:20px; position:relative;">
+      <input type="text" id="part-pricing-search-input" class="form-control" placeholder="Search component or option (e.g. Axle, Air Suspension, Floor, Hardox)..." oninput="filterPartPricingMatrixItems(this.value)" style="padding-left:36px; height:40px; border-radius:6px; font-size:0.85rem; border:1px solid #CBD5E1;">
+      <svg style="position:absolute; left:12px; top:12px; width:16px; height:16px; color:#64748B;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+    </div>
+  `;
+
+  template.specs.forEach(spec => {
+    if (spec.options && spec.options.length > 0) {
+      html += `
+        <div class="part-spec-group-section" data-spec-name="${spec.name.toLowerCase()}" style="margin-bottom:18px; padding-bottom:12px; border-bottom:1px solid #E2E8F0;">
+          <h5 style="margin:0 0 8px 0; font-size:0.825rem; font-weight:700; color:#334155; text-transform:uppercase;">${spec.name} Options</h5>
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+      `;
+
+      spec.options.forEach(opt => {
+        let currentDiff = getEffectiveSpecPriceDiff(spec, opt);
+
+        html += `
+          <div class="part-price-item-card" data-option-name="${opt.toLowerCase()}" style="display:flex; align-items:center; justify-content:space-between; background:#F8FAFC; padding:6px 10px; border-radius:6px; border:1px solid #E2E8F0;">
+            <span style="font-size:0.775rem; font-weight:600; color:#475569;">${opt}</span>
+            <div style="display:flex; align-items:center; gap:4px;">
+              <span style="font-size:0.75rem; color:#64748B;">₹</span>
+              <input type="number" class="form-control form-control-sm part-price-diff-input" data-spec-id="${spec.id}" data-option="${opt}" value="${currentDiff}" style="width:105px; text-align:right; font-weight:bold; padding:2px 6px;">
+            </div>
+          </div>
+        `;
+      });
+
+      html += `</div></div>`;
+    }
+  });
+
+  container.innerHTML = html;
+  document.getElementById('part-pricing-modal').classList.add('active');
+  setTimeout(() => {
+    const searchInp = document.getElementById('part-pricing-search-input');
+    if (searchInp) searchInp.focus();
+  }, 100);
+};
+
+window.filterPartPricingMatrixItems = function(query) {
+  const q = (query || '').toLowerCase().trim();
+  const specSections = document.querySelectorAll('#part-pricing-modal-body .part-spec-group-section');
+
+  specSections.forEach(section => {
+    const sectionName = section.getAttribute('data-spec-name') || '';
+    const items = section.querySelectorAll('.part-price-item-card');
+    let hasVisibleItem = false;
+
+    items.forEach(item => {
+      const optName = item.getAttribute('data-option-name') || '';
+      const match = !q || sectionName.includes(q) || optName.includes(q);
+
+      if (match) {
+        item.style.display = 'flex';
+        hasVisibleItem = true;
+      } else {
+        item.style.display = 'none';
+      }
+    });
+
+    if (hasVisibleItem) {
+      section.style.display = 'block';
+    } else {
+      section.style.display = 'none';
+    }
+  });
+};
+
+window.closePartPricingMatrixModal = function() {
+  document.getElementById('part-pricing-modal').classList.remove('active');
+};
+
+window.saveComponentPartPricingFromModal = function() {
+  const template = WIZARD_PRODUCT_TEMPLATES[wizardState.subtype];
+  if (!template) return;
+
+  const inputs = document.querySelectorAll('#part-pricing-modal-body .part-price-diff-input');
+  inputs.forEach(input => {
+    const specId = input.getAttribute('data-spec-id');
+    const option = input.getAttribute('data-option');
+    const val = parseFloat(input.value) || 0;
+
+    const spec = template.specs.find(s => s.id === specId);
+    if (spec) {
+      if (!spec.priceDiffs) spec.priceDiffs = {};
+      spec.priceDiffs[option] = val;
+
+      if (specId === 'floor' && option.includes('6mm')) STATE.adminPricing.floor6 = val;
+      if (specId === 'floor' && option.includes('10mm')) STATE.adminPricing.floor10 = val;
+      if (specId === 'beam' && option.includes('Hardox')) STATE.adminPricing.steelHardox = val;
+      if (specId === 'axles' && option.includes('2x13T')) STATE.adminPricing.axle2 = val;
+      if (specId === 'axles' && option.includes('3x16T')) STATE.adminPricing.axle3_16 = val;
+    }
+  });
+
+  saveState();
+  renderConfiguratorFormInputs(template);
+  calculateWizardPricing();
+  closePartPricingMatrixModal();
+  logSystemActivity(`Updated component part pricing matrix for ${template.name}.`);
+  alert(`Component part prices updated and saved as system market defaults for ${template.name}!`);
+};
+
 // Step 4 pricing calculator
 function calculateWizardPricing() {
   const template = WIZARD_PRODUCT_TEMPLATES[wizardState.subtype];
   if (!template) return;
 
-  let basePrice = template.basePrice;
+  let defaultPrice = (STATE.adminPricing && STATE.adminPricing.basePrices && STATE.adminPricing.basePrices[wizardState.subtype])
+    ? STATE.adminPricing.basePrices[wizardState.subtype]
+    : template.basePrice;
+  let basePrice = (wizardState.customBasePrice !== undefined) ? wizardState.customBasePrice : defaultPrice;
+
   let upgradesHtml = '';
   let upgradesTotal = 0;
 
   // Calculate Spec Upgrades
   template.specs.forEach(spec => {
     const selectedVal = wizardState.specs[spec.id];
-    if (selectedVal && spec.priceDiffs && spec.priceDiffs[selectedVal]) {
-      let diff = spec.priceDiffs[selectedVal];
-      
-      // Override floor/steel axle price differentials using global configurations if applicable
-      if (spec.id === 'floor' && selectedVal.includes('6mm')) diff = STATE.adminPricing.floor6;
-      if (spec.id === 'floor' && selectedVal.includes('10mm')) diff = STATE.adminPricing.floor10;
-      if (spec.id === 'beam' && selectedVal.includes('Hardox')) diff = STATE.adminPricing.steelHardox;
-      if (spec.id === 'axles' && selectedVal.includes('2x13T')) diff = STATE.adminPricing.axle2;
-      if (spec.id === 'axles' && selectedVal.includes('3x16T')) diff = STATE.adminPricing.axle3_16;
+    if (selectedVal) {
+      let diff = getEffectiveSpecPriceDiff(spec, selectedVal);
 
       upgradesTotal += diff;
       if (diff !== 0) {
         upgradesHtml += `
           <div class="preview-row indent">
             <span>+ Upgrade: ${spec.name} (${selectedVal})</span>
-            <span>₹${diff.toLocaleString('en-IN')}</span>
+            <span>${diff > 0 ? '+' : ''}₹${diff.toLocaleString('en-IN')}</span>
           </div>
         `;
       }
@@ -914,9 +1066,18 @@ function calculateWizardPricing() {
   const summarySheet = document.getElementById('w-live-summary-sheet');
   if (summarySheet) {
     summarySheet.innerHTML = `
-      <div class="preview-row" style="font-weight:700">
-        <span>Base ${template.name}</span>
-        <span>₹${basePrice.toLocaleString('en-IN')}</span>
+      <div class="preview-row" style="font-weight:700;align-items:center;">
+        <span>Base Model Market Price</span>
+        <div style="display:flex;align-items:center;gap:4px;">
+          <span>₹</span>
+          <input type="number" id="w-override-base-price" class="form-control form-control-sm" style="width:120px;text-align:right;font-weight:bold;padding:2px 6px;" value="${basePrice}" oninput="updateManualBasePrice(this.value)">
+        </div>
+      </div>
+      <div style="text-align:right;margin-top:6px;margin-bottom:12px;">
+        <button type="button" onclick="saveCurrentBasePriceAsDefault()" style="display:inline-flex;align-items:center;gap:6px;background:#10B981;color:#ffffff;border:none;padding:6px 12px;font-size:0.75rem;font-weight:700;border-radius:6px;cursor:pointer;box-shadow:0 2px 5px rgba(16,185,129,0.3);transition:all 0.2s ease;">
+          <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
+          Save Base Price as Default
+        </button>
       </div>
       
       ${upgradesHtml ? `

@@ -470,7 +470,13 @@
             
             <!-- Left Side Configurator Parameters -->
             <div class="configurator-forms-box">
-              <h2 class="mb-md text-uppercase" style="font-size: 0.95rem; color: var(--color-primary); font-weight:700">Customize Vehicle Specs</h2>
+              <div style="display:flex; justify-content:space-between; align-items:center;" class="mb-md">
+                <h2 class="text-uppercase" style="font-size: 0.95rem; color: var(--color-primary); font-weight:700; margin:0;">Customize Vehicle Specs</h2>
+                <button type="button" class="btn btn-outline btn-sm" onclick="openPartPricingMatrixModal()" style="display:inline-flex;align-items:center;gap:6px;font-weight:700;border-color:var(--color-primary);color:var(--color-primary);background:#F0FDF4;padding:5px 10px;border-radius:6px;">
+                  <svg style="width:15px;height:15px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                  ⚙️ Edit Component Part Prices
+                </button>
+              </div>
               
               <!-- SECTION A: STEEL & MATERIAL PANELS -->
               <div class="collapsible-section" id="spec-sec-material">
@@ -1197,6 +1203,31 @@
             <div class="pdf-bottom-bar"></div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================== -->
+  <!-- COMPONENT PART PRICING MATRIX MODAL -->
+  <!-- ========================================== -->
+  <div class="pdf-modal" id="part-pricing-modal" style="z-index:9999;">
+    <div class="pdf-modal-container" style="max-width:720px; background:#ffffff; border-radius:12px; overflow:hidden; box-shadow:0 10px 40px rgba(0,0,0,0.3); height:auto; max-height:90vh;">
+      <div class="pdf-modal-toolbar" style="background:#0F172A; color:#ffffff; padding:16px 24px; display:flex; justify-content:space-between; align-items:center;">
+        <h3 style="margin:0; font-size:1.05rem; font-weight:700; display:flex; align-items:center; gap:8px; color:#ffffff;">
+          ⚙️ Edit Component Part Pricing Matrix
+        </h3>
+        <button type="button" class="btn btn-outline btn-xs" onclick="closePartPricingMatrixModal()" style="color:#ffffff; border-color:rgba(255,255,255,0.4); padding:4px 10px;">✕ Close</button>
+      </div>
+      
+      <div style="padding:24px; max-height:65vh; overflow-y:auto;" id="part-pricing-modal-body">
+        <!-- Injected dynamically by JS per active product model -->
+      </div>
+      
+      <div style="padding:16px 24px; background:#F8FAFC; border-top:1px solid #E2E8F0; display:flex; justify-content:space-between; align-items:center;">
+        <span class="section-hint" style="font-size:0.75rem;">Prices saved here update defaults for future quotations.</span>
+        <div style="display:flex; gap:12px;">
+          <button type="button" class="btn btn-outline btn-sm" onclick="closePartPricingMatrixModal()">Cancel</button>
+          <button type="button" class="btn btn-primary btn-sm" onclick="saveComponentPartPricingFromModal()" style="background:#10B981; border:none; font-weight:700; color:#ffffff; padding:6px 14px; border-radius:6px;">💾 Save Component Prices as Market Defaults</button>
         </div>
       </div>
     </div>
