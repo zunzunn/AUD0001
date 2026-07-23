@@ -1456,12 +1456,11 @@ function downloadPdf(quoteId) {
   }
 }
 
-// Format numbers like 6,48,306=00
+// Format numbers like 3,80,000/-
 function formatPdfPrice(num) {
-  return num.toLocaleString('en-IN') + '=00';
+  return num.toLocaleString('en-IN') + '/-';
 }
 
-// Indian Numbering System Converter
 function priceToIndianWords(num) {
   if (num === 0) return 'zero';
   const a = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
