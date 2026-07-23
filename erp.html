@@ -598,7 +598,8 @@
           <div class="grid grid-3-2-col gap-lg">
             <!-- Left Side: A4 Document View -->
             <div class="pdf-modal-content" style="padding: 0; background-color: #374151;">
-              <div id="w-pdf-sheet-render" style="display: flex; flex-direction: column; gap: 20px; scale: 0.9; transform-origin: top center;">
+              <div class="pdf-sheet-scale-wrapper" style="transform: scale(0.85); transform-origin: top center; width: 100%; display: flex; justify-content: center;">
+                <div id="w-pdf-sheet-render" style="display: flex; flex-direction: column; gap: 20px;">
                 <!-- PAGE 1 -->
                 <div class="pdf-page" style="box-shadow: none;">
                   <div class="pdf-header">
@@ -774,6 +775,7 @@
                 </div>
               </div>
             </div>
+          </div>
 
             <!-- Right Side Controls Panel -->
             <div class="quote-preview-sticky">

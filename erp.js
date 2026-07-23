@@ -1089,7 +1089,25 @@ window.downloadWizardPdf = function() {
     margin:       [0, 0, 0, 0],
     filename:     `NEXFRA_Quotation_${quoteId}.pdf`,
     image:        { type: 'jpeg', quality: 0.98 },
-    html2canvas:  { scale: 2, useCORS: true, letterRendering: false, scrollY: 0 },
+    html2canvas:  { 
+      scale: 2, 
+      useCORS: true, 
+      letterRendering: false, 
+      scrollY: 0,
+      onclone: (clonedDoc) => {
+        const sheet = clonedDoc.getElementById('w-pdf-sheet-render');
+        if (sheet) {
+          sheet.style.transform = 'none';
+          sheet.style.scale = '1';
+        }
+        clonedDoc.querySelectorAll('.pdf-page, .pdf-page *').forEach(el => {
+          el.style.fontFamily = 'Arial, Helvetica, sans-serif';
+          el.style.wordSpacing = '0.15em';
+          el.style.letterSpacing = 'normal';
+          el.style.whiteSpace = 'normal';
+        });
+      }
+    },
     jsPDF:        { unit: 'pt', format: 'a4', orientation: 'portrait' },
     pagebreak:    { mode: ['css', 'legacy'] }
   };
@@ -1446,7 +1464,25 @@ function downloadPdf(quoteId) {
     margin:       [0, 0, 0, 0],
     filename:     `NEXFRA_Quotation_${quoteId}.pdf`,
     image:        { type: 'jpeg', quality: 0.98 },
-    html2canvas:  { scale: 2, useCORS: true, letterRendering: false, scrollY: 0 },
+    html2canvas:  { 
+      scale: 2, 
+      useCORS: true, 
+      letterRendering: false, 
+      scrollY: 0,
+      onclone: (clonedDoc) => {
+        const sheet = clonedDoc.getElementById('pdf-content-to-print');
+        if (sheet) {
+          sheet.style.transform = 'none';
+          sheet.style.scale = '1';
+        }
+        clonedDoc.querySelectorAll('.pdf-page, .pdf-page *').forEach(el => {
+          el.style.fontFamily = 'Arial, Helvetica, sans-serif';
+          el.style.wordSpacing = '0.15em';
+          el.style.letterSpacing = 'normal';
+          el.style.whiteSpace = 'normal';
+        });
+      }
+    },
     jsPDF:        { unit: 'pt', format: 'a4', orientation: 'portrait' },
     pagebreak:    { mode: ['css', 'legacy'] }
   };
