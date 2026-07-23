@@ -561,18 +561,26 @@ window.jumpToWizardStep = function(stepNum) {
 
 function validateStepInputs(stepNum) {
   if (stepNum === 1) {
-    const name = document.getElementById('w-cust-name').value;
-    const company = document.getElementById('w-cust-company').value;
-    const gst = document.getElementById('w-cust-gst').value;
-    const phone = document.getElementById('w-cust-phone').value;
-    const email = document.getElementById('w-cust-email').value;
-    const model = document.getElementById('w-cust-model').value;
-    const address = document.getElementById('w-cust-address').value;
+    const name = document.getElementById('w-cust-name').value.trim();
+    const phone = document.getElementById('w-cust-phone').value.trim();
 
-    if (!name || !company || !gst || !phone || !email || !model || !address) {
-      alert("Please fill in all customer details fields to continue.");
+    if (!name) {
+      alert("Customer Name is compulsory. Please enter the Customer Name to continue.");
+      document.getElementById('w-cust-name').focus();
       return false;
     }
+
+    if (!phone) {
+      alert("Phone Number is compulsory. Please enter the Phone Number to continue.");
+      document.getElementById('w-cust-phone').focus();
+      return false;
+    }
+
+    const company = document.getElementById('w-cust-company').value.trim() || name;
+    const gst = document.getElementById('w-cust-gst').value.trim() || 'URP';
+    const email = document.getElementById('w-cust-email').value.trim() || 'customer@nexfra.in';
+    const model = document.getElementById('w-cust-model').value.trim() || 'Commercial Vehicle';
+    const address = document.getElementById('w-cust-address').value.trim() || 'Hosur, TN, India';
 
     // Save step 1 to state
     wizardState.customer = {
@@ -582,11 +590,11 @@ function validateStepInputs(stepNum) {
       phone,
       email,
       address,
-      salesperson: document.getElementById('w-cust-salesperson').value,
+      salesperson: document.getElementById('w-cust-salesperson').value.trim() || 'Prashanth kumar M P',
       model,
-      chassis: document.getElementById('w-cust-chassis').value || 'NA-CHASSIS',
+      chassis: document.getElementById('w-cust-chassis').value.trim() || 'NA-CHASSIS',
       qty: parseInt(document.getElementById('w-cust-qty').value, 10) || 1,
-      date: document.getElementById('w-cust-date').value
+      date: document.getElementById('w-cust-date').value || new Date().toISOString().split('T')[0]
     };
   }
   return true;
