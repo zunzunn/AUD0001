@@ -24,8 +24,127 @@ const STAGES = [
 ];
 
 let STATE = {};
-let currentCustomItems = [];
 let currentPreviewQuoteId = '';
+
+// Product Configurator Wizard State
+let wizardState = {
+  currentStep: 1,
+  customer: {},
+  category: '',
+  subtype: '',
+  capacity: '',
+  specs: {},
+  customMods: [],
+  status: 'Draft',
+  total: 0
+};
+
+// Master Vehicle Configurator Templates
+const WIZARD_PRODUCT_TEMPLATES = {
+  flatbed: {
+    name: "Flat Bed Trailer",
+    basePrice: 520000,
+    dimensions: { length: "40 Feet", height: "NA", width: "98 Inches" },
+    specs: [
+      { id: "beam", name: "Main Beam Steel Grade", section: "material", type: "dropdown", options: ["ST52", "Hardox 450", "BSK46", "E450", "Custom"], defaultValue: "ST52", priceDiffs: { "ST52": 0, "Hardox 450": 150000, "BSK46": 40000, "E450": 60000, "Custom": 80000 } },
+      { id: "floor", name: "Floor Sheet Type", section: "material", type: "dropdown", options: ["3mm Chequered", "4mm Plain", "6mm ST52", "Custom"], defaultValue: "3mm Chequered", priceDiffs: { "3mm Chequered": 0, "4mm Plain": 15000, "6mm ST52": 45000, "Custom": 60000 } },
+      { id: "axles", name: "Axle Brand & Loading", section: "chassis", type: "radio", options: ["York 3x13T", "Fuwa 3x13T", "York 3x16T", "York 2x13T", "Custom"], defaultValue: "York 3x13T", priceDiffs: { "York 3x13T": 0, "Fuwa 3x13T": -10000, "York 3x16T": 80000, "York 2x13T": -100000, "Custom": 50000 } },
+      { id: "suspension", name: "Suspension System", section: "chassis", type: "dropdown", options: ["Mechanical Leaf Spring", "Air Suspension", "Bogie Suspension", "Custom"], defaultValue: "Mechanical Leaf Spring", priceDiffs: { "Mechanical Leaf Spring": 0, "Air Suspension": 120000, "Bogie Suspension": 90000, "Custom": 80000 } },
+      { id: "brake", name: "Brake System Pneumatic", section: "chassis", type: "dropdown", options: ["WABCO ABS", "BCS EBS", "Brake Master", "Custom"], defaultValue: "WABCO ABS", priceDiffs: { "WABCO ABS": 0, "BCS EBS": 60000, "Brake Master": 20000, "Custom": 40000 } },
+      { id: "disc", name: "Wheel Disc Style", section: "chassis", type: "dropdown", options: ["Steel 10-hole", "Alloy York", "Custom"], defaultValue: "Steel 10-hole", priceDiffs: { "Steel 10-hole": 0, "Alloy York": 45000, "Custom": 25000 } },
+      { id: "hook", name: "King Pin/Hook Size", section: "chassis", type: "dropdown", options: ["Standard 2-inch JOST", "Heavy Duty 3.5-inch JOST", "Custom"], defaultValue: "Standard 2-inch JOST", priceDiffs: { "Standard 2-inch JOST": 0, "Heavy Duty 3.5-inch JOST": 15000, "Custom": 10000 } },
+      { id: "tyre", name: "Tyres Fitted", section: "chassis", type: "dropdown", options: ["Apollo 10.00R20", "MRF Musclerok", "JK Jetsteel", "Bridgestone", "Custom"], defaultValue: "Apollo 10.00R20", priceDiffs: { "Apollo 10.00R20": 0, "MRF Musclerok": 12000, "JK Jetsteel": -8000, "Bridgestone": 24000, "Custom": 15000 } },
+      { id: "painting", name: "Surface Treatment", section: "painting", type: "dropdown", options: ["Epoxy Primer + PU Paint", "Epoxy Primer + Epoxy Paint", "Customer Choice", "Custom"], defaultValue: "Epoxy Primer + PU Paint", priceDiffs: { "Epoxy Primer + PU Paint": 0, "Epoxy Primer + Epoxy Paint": -15000, "Customer Choice": 0, "Custom": 20000 } },
+      { id: "colour", name: "Finish Colour", section: "painting", type: "text", defaultValue: "Golden Green" },
+      { id: "toolbox", name: "Fitted Tool Box", section: "accessories", type: "checkbox", defaultValue: "Yes", priceDiffs: { "Yes": 0, "No": -5000 } },
+      { id: "spare_wheel", name: "Spare Wheel Carrier", section: "accessories", type: "checkbox", defaultValue: "Yes", priceDiffs: { "Yes": 0, "No": -8000 } }
+    ]
+  },
+  sidewall: {
+    name: "Side Wall Trailer",
+    basePrice: 580000,
+    dimensions: { length: "40 Feet", height: "4.5 Feet", width: "98 Inches" },
+    specs: [
+      { id: "beam", name: "Main Beam Steel Grade", section: "material", type: "dropdown", options: ["ST52", "Hardox 450", "BSK46", "E450", "Custom"], defaultValue: "ST52", priceDiffs: { "ST52": 0, "Hardox 450": 150000, "BSK46": 40000, "E450": 60000, "Custom": 80000 } },
+      { id: "floor", name: "Floor Sheet Type", section: "material", type: "dropdown", options: ["3mm Chequered", "4mm Plain", "6mm ST52", "Custom"], defaultValue: "3mm Chequered", priceDiffs: { "3mm Chequered": 0, "4mm Plain": 15000, "6mm ST52": 45000, "Custom": 60000 } },
+      { id: "side_panel", name: "Side Panel Height/Style", section: "material", type: "radio", options: ["1.5mm Corrugated", "2mm Corrugated", "Custom"], defaultValue: "1.5mm Corrugated", priceDiffs: { "1.5mm Corrugated": 0, "2mm Corrugated": 25000, "Custom": 40000 } },
+      { id: "axles", name: "Axle Brand & Loading", section: "chassis", type: "radio", options: ["York 3x13T", "Fuwa 3x13T", "York 3x16T", "York 2x13T", "Custom"], defaultValue: "York 3x13T", priceDiffs: { "York 3x13T": 0, "Fuwa 3x13T": -10000, "York 3x16T": 80000, "York 2x13T": -100000, "Custom": 50000 } },
+      { id: "suspension", name: "Suspension System", section: "chassis", type: "dropdown", options: ["Mechanical Leaf Spring", "Air Suspension", "Bogie Suspension", "Custom"], defaultValue: "Mechanical Leaf Spring", priceDiffs: { "Mechanical Leaf Spring": 0, "Air Suspension": 120000, "Bogie Suspension": 90000, "Custom": 80000 } },
+      { id: "brake", name: "Brake System Pneumatic", section: "chassis", type: "dropdown", options: ["WABCO ABS", "BCS EBS", "Brake Master", "Custom"], defaultValue: "WABCO ABS", priceDiffs: { "WABCO ABS": 0, "BCS EBS": 60000, "Brake Master": 20000, "Custom": 40000 } },
+      { id: "tyre", name: "Tyres Fitted", section: "chassis", type: "dropdown", options: ["Apollo 10.00R20", "MRF Musclerok", "JK Jetsteel", "Bridgestone", "Custom"], defaultValue: "Apollo 10.00R20", priceDiffs: { "Apollo 10.00R20": 0, "MRF Musclerok": 12000, "JK Jetsteel": -8000, "Bridgestone": 24000, "Custom": 15000 } },
+      { id: "painting", name: "Surface Treatment", section: "painting", type: "dropdown", options: ["Epoxy Primer + PU Paint", "Epoxy Primer + Epoxy Paint", "Customer Choice", "Custom"], defaultValue: "Epoxy Primer + PU Paint", priceDiffs: { "Epoxy Primer + PU Paint": 0, "Epoxy Primer + Epoxy Paint": -15000, "Customer Choice": 0, "Custom": 20000 } },
+      { id: "colour", name: "Finish Colour", section: "painting", type: "text", defaultValue: "Golden Green" }
+    ]
+  },
+  tiptrailer: {
+    name: "Tip Trailer",
+    basePrice: 720000,
+    dimensions: { length: "32 Feet", height: "4.5 Feet", width: "98 Inches" },
+    specs: [
+      { id: "beam", name: "Main Beam Steel Grade", section: "material", type: "dropdown", options: ["ST52", "Hardox 450", "BSK46", "E450", "Custom"], defaultValue: "ST52", priceDiffs: { "ST52": 0, "Hardox 450": 150000, "BSK46": 40000, "E450": 60000, "Custom": 80000 } },
+      { id: "floor", name: "Floor Sheet thickness", section: "material", type: "dropdown", options: ["6mm MS", "8mm ST-52", "10mm ST-52", "Custom"], defaultValue: "8mm ST-52", priceDiffs: { "6mm MS": -15000, "8mm ST-52": 0, "10mm ST-52": 30000, "Custom": 45000 } },
+      { id: "side_sheet", name: "Side Sheet thickness", section: "material", type: "dropdown", options: ["4mm MS", "6mm ST-52", "8mm ST-52", "Custom"], defaultValue: "6mm ST-52", priceDiffs: { "4mm MS": -10000, "6mm ST-52": 0, "8mm ST-52": 25000, "Custom": 40000 } },
+      { id: "cylinder", name: "Tipping Cylinder Model", section: "hydraulic", type: "dropdown", options: ["Hyva 179-5stage", "Hyva 150-4stage", "Wipro Heavy Duty", "Custom"], defaultValue: "Hyva 179-5stage", priceDiffs: { "Hyva 179-5stage": 0, "Hyva 150-4stage": -25000, "Wipro Heavy Duty": -10000, "Custom": 20000 } },
+      { id: "axles", name: "Axles Fitted", section: "chassis", type: "radio", options: ["York 3x13T", "York 3x16T", "York 2x13T", "Custom"], defaultValue: "York 3x13T", priceDiffs: { "York 3x13T": 0, "York 3x16T": 80000, "York 2x13T": -100000, "Custom": 40000 } },
+      { id: "painting", name: "Surface Treatment", section: "painting", type: "dropdown", options: ["Epoxy Primer + PU Paint", "Epoxy Primer + Epoxy Paint", "Custom"], defaultValue: "Epoxy Primer + PU Paint", priceDiffs: { "Epoxy Primer + PU Paint": 0, "Epoxy Primer + Epoxy Paint": -15000, "Custom": 20000 } },
+      { id: "colour", name: "Finish Colour", section: "painting", type: "text", defaultValue: "Royal Blue" }
+    ]
+  },
+  boxbody: {
+    name: "Box Body Tipper",
+    basePrice: 480000,
+    dimensions: { length: "20 Feet", height: "4.5 Feet", width: "98 Inches" },
+    specs: [
+      { id: "floor", name: "Floor Sheet thickness", section: "material", type: "dropdown", options: ["6mm MS", "8mm ST-52", "10mm ST-52", "Custom"], defaultValue: "8mm ST-52", priceDiffs: { "6mm MS": -15000, "8mm ST-52": 0, "10mm ST-52": 30000, "Custom": 45000 } },
+      { id: "side_sheet", name: "Side Sheet thickness", section: "material", type: "dropdown", options: ["4mm MS", "6mm ST-52", "8mm ST-52", "Custom"], defaultValue: "6mm ST-52", priceDiffs: { "4mm MS": -10000, "6mm ST-52": 0, "8mm ST-52": 25000, "Custom": 40000 } },
+      { id: "headboard", name: "Headboard Sheet thickness", section: "material", type: "dropdown", options: ["6mm ST-52", "8mm ST-52", "Custom"], defaultValue: "6mm ST-52", priceDiffs: { "6mm ST-52": 0, "8mm ST-52": 15000, "Custom": 25000 } },
+      { id: "taildoor", name: "Tail Door thickness", section: "material", type: "dropdown", options: ["6mm ST-52", "8mm ST-52", "Custom"], defaultValue: "6mm ST-52", priceDiffs: { "6mm ST-52": 0, "8mm ST-52": 15000, "Custom": 25000 } },
+      { id: "cylinder", name: "Tipping Cylinder Model", section: "hydraulic", type: "dropdown", options: ["Hyva 150-4stage-4520", "Hyva 179-5stage", "Wipro Heavy Duty", "Custom"], defaultValue: "Hyva 150-4stage-4520", priceDiffs: { "Hyva 150-4stage-4520": 0, "Hyva 179-5stage": 35000, "Wipro Heavy Duty": 10000, "Custom": 20000 } },
+      { id: "pto", name: "Power Take-Off (PTO)", section: "hydraulic", type: "checkbox", defaultValue: "Yes", priceDiffs: { "Yes": 0, "No": -12000 } },
+      { id: "pump", name: "Hydraulic Pump Type", section: "hydraulic", type: "dropdown", options: ["Included Gear Pump", "Included Piston Pump", "Custom"], defaultValue: "Included Gear Pump", priceDiffs: { "Included Gear Pump": 0, "Included Piston Pump": 28000, "Custom": 15000 } },
+      { id: "lock_system", name: "Tail Door Lock System", section: "chassis", type: "radio", options: ["Horizontal Lock System", "Manual Lock", "Custom"], defaultValue: "Horizontal Lock System", priceDiffs: { "Horizontal Lock System": 0, "Manual Lock": -10000, "Custom": 15000 } },
+      { id: "painting", name: "Surface Treatment", section: "painting", type: "dropdown", options: ["Epoxy Primer + PU Paint", "Epoxy Primer + Epoxy Paint", "Custom"], defaultValue: "Epoxy Primer + PU Paint", priceDiffs: { "Epoxy Primer + PU Paint": 0, "Epoxy Primer + Epoxy Paint": -15000, "Custom": 20000 } },
+      { id: "reflective_tape", name: "Reflective Safety Tape", section: "accessories", type: "radio", options: ["RTO std & guidelines", "Standard 3M", "Custom"], defaultValue: "RTO std & guidelines", priceDiffs: { "RTO std & guidelines": 0, "Standard 3M": 8000, "Custom": 12000 } },
+      { id: "marker_lamps", name: "Safety Marker Lamps", section: "accessories", type: "dropdown", options: ["Side Marker Lamp 6 no's and top marker lamp 2 no's", "Standard 4 marker lamps", "Custom"], defaultValue: "Side Marker Lamp 6 no's and top marker lamp 2 no's", priceDiffs: { "Side Marker Lamp 6 no's and top marker lamp 2 no's": 0, "Standard 4 marker lamps": -5000, "Custom": 10000 } },
+      { id: "tipping_angle", name: "Maximum Tipping Angle", section: "accessories", type: "text", defaultValue: "42 to 45 degrees" },
+      { id: "colour", name: "Finish Colour", section: "painting", type: "text", defaultValue: "Golden Green" }
+    ]
+  },
+  rockbody: {
+    name: "Rock Body Tipper",
+    basePrice: 650000,
+    dimensions: { length: "18 Feet", height: "4.0 Feet", width: "98 Inches" },
+    specs: [
+      { id: "floor", name: "Floor Sheet thickness", section: "material", type: "dropdown", options: ["10mm ST-52", "12mm Hardox 450", "Custom"], defaultValue: "10mm ST-52", priceDiffs: { "10mm ST-52": 0, "12mm Hardox 450": 180000, "Custom": 80000 } },
+      { id: "side_sheet", name: "Side Sheet thickness", section: "material", type: "dropdown", options: ["8mm ST-52", "10mm Hardox 450", "Custom"], defaultValue: "8mm ST-52", priceDiffs: { "8mm ST-52": 0, "10mm Hardox 450": 120000, "Custom": 60000 } },
+      { id: "cylinder", name: "Tipping Cylinder Model", section: "hydraulic", type: "dropdown", options: ["Hyva 179-5stage", "Hyva 150-4stage", "Custom"], defaultValue: "Hyva 179-5stage", priceDiffs: { "Hyva 179-5stage": 0, "Hyva 150-4stage": -25000, "Custom": 20000 } },
+      { id: "painting", name: "Surface Treatment", section: "painting", type: "dropdown", options: ["Epoxy Primer + PU Paint", "Epoxy Primer + Epoxy Paint", "Custom"], defaultValue: "Epoxy Primer + PU Paint", priceDiffs: { "Epoxy Primer + PU Paint": 0, "Epoxy Primer + Epoxy Paint": -15000, "Custom": 20000 } },
+      { id: "colour", name: "Finish Colour", section: "painting", type: "text", defaultValue: "Crimson Red" }
+    ]
+  },
+  rigid28: {
+    name: "28 Feet Load Body",
+    basePrice: 380000,
+    dimensions: { length: "28 Feet", height: "4.0 Feet", width: "98 Inches" },
+    specs: [
+      { id: "floor", name: "Floor Plate Type", section: "material", type: "dropdown", options: ["3mm MS Chequered", "4mm MS Plain", "Custom"], defaultValue: "3mm MS Chequered", priceDiffs: { "3mm MS Chequered": 0, "4mm MS Plain": 18000, "Custom": 30000 } },
+      { id: "side_panel", name: "Side Panel Height", section: "material", type: "dropdown", options: ["4 Feet MS", "5 Feet MS", "Custom"], defaultValue: "4 Feet MS", priceDiffs: { "4 Feet MS": 0, "5 Feet MS": 20000, "Custom": 35000 } },
+      { id: "painting", name: "Painting Finish", section: "painting", type: "dropdown", options: ["Epoxy Primer + PU Paint", "Epoxy Primer + Epoxy Paint", "Custom"], defaultValue: "Epoxy Primer + PU Paint", priceDiffs: { "Epoxy Primer + PU Paint": 0, "Epoxy Primer + Epoxy Paint": -10000, "Custom": 15000 } },
+      { id: "colour", name: "Body Finish Colour", section: "painting", type: "text", defaultValue: "Royal Blue" }
+    ]
+  },
+  rigid30: {
+    name: "30 Feet Load Body",
+    basePrice: 420000,
+    dimensions: { length: "30 Feet", height: "4.0 Feet", width: "98 Inches" },
+    specs: [
+      { id: "floor", name: "Floor Plate Type", section: "material", type: "dropdown", options: ["3mm MS Chequered", "4mm MS Plain", "Custom"], defaultValue: "3mm MS Chequered", priceDiffs: { "3mm MS Chequered": 0, "4mm MS Plain": 18000, "Custom": 30000 } },
+      { id: "side_panel", name: "Side Panel Height", section: "material", type: "dropdown", options: ["4 Feet MS", "5 Feet MS", "Custom"], defaultValue: "4 Feet MS", priceDiffs: { "4 Feet MS": 0, "5 Feet MS": 20000, "Custom": 35000 } },
+      { id: "painting", name: "Painting Finish", section: "painting", type: "dropdown", options: ["Epoxy Primer + PU Paint", "Epoxy Primer + Epoxy Paint", "Custom"], defaultValue: "Epoxy Primer + PU Paint", priceDiffs: { "Epoxy Primer + PU Paint": 0, "Epoxy Primer + Epoxy Paint": -10000, "Custom": 15000 } },
+      { id: "colour", name: "Body Finish Colour", section: "painting", type: "text", defaultValue: "Crimson Red" }
+    ]
+  }
+};
 
 function loadState() {
   const saved = localStorage.getItem('NEXFRA_ERP_STATE');
@@ -77,13 +196,22 @@ function handleUrlRouting() {
 
   switchModule(targetModule);
 
-  if (targetModule === 'quotations' && targetProduct) {
-    const prodSelect = document.getElementById('quote-product-select');
-    if (prodSelect) {
-      prodSelect.value = targetProduct;
-      generateTemplateDropdown(targetProduct);
-      generateDynamicSpecs(targetProduct);
-      calculateQuotePricing();
+  if (targetModule === 'quotations') {
+    startNewQuotationWizard();
+    if (targetProduct) {
+      // Map product keys
+      let mappedCat = 'trailer';
+      let mappedSub = 'flatbed';
+      if (targetProduct.includes('tiptrailer')) { mappedCat = 'trailer'; mappedSub = 'tiptrailer'; }
+      else if (targetProduct.includes('boxbody')) { mappedCat = 'tipper'; mappedSub = 'boxbody'; }
+      else if (targetProduct.includes('rockbody')) { mappedCat = 'tipper'; mappedSub = 'rockbody'; }
+      
+      selectProductCategory(mappedCat);
+      selectProductSubtype(mappedSub);
+      if (mappedCat === 'tipper') {
+        selectChassisCapacity('25 CBM');
+      }
+      advanceWizardStep(4);
     }
   }
 }
@@ -116,10 +244,10 @@ function switchModule(moduleName) {
   if (activeView) {
     activeView.classList.add('active');
     
-    // Smooth fade in
+    // Smooth GSAP staggered viewport load
     gsap.fromTo(activeView.children, { opacity: 0, y: 10 }, { opacity: 1, y: 0, stagger: 0.05, duration: 0.3 });
 
-    // Refresh module details
+    // Refresh modules
     if (moduleName === 'dashboard') renderDashboardOverview();
     if (moduleName === 'sales') renderSalesHistoryTable();
     if (moduleName === 'workorders') renderWorkOrders();
@@ -127,6 +255,7 @@ function switchModule(moduleName) {
     if (moduleName === 'accounts') renderAccountsLedger();
     if (moduleName === 'customers') renderCustomersDirectory();
     if (moduleName === 'admin') renderAdminSettings();
+    if (moduleName === 'quotations') startNewQuotationWizard();
   }
 }
 
@@ -152,7 +281,6 @@ function initLogout() {
 // 3. MODULE RENDERERS
 // ------------------------------------------
 
-// Overview module
 function renderDashboardOverview() {
   loadState();
   
@@ -166,13 +294,11 @@ function renderDashboardOverview() {
   document.getElementById('kpi-pending-quotes').innerText = pendingQuotesCount;
   document.getElementById('kpi-receivable').innerText = `₹${(outstandingBalance/100000).toFixed(1)}L`;
 
-  // Render logs list
   const logListContainer = document.getElementById('system-log-list');
   logListContainer.innerHTML = STATE.logs.map(log => `
     <li><span class="log-time">${log.time}</span> ${log.message}</li>
   `).join('');
 
-  // Render chassis work order flow summaries
   const dashWOSummary = document.getElementById('dash-wo-summary');
   const activeWOs = STATE.workOrders.filter(w => w.stage !== 'Delivered');
   
@@ -204,7 +330,6 @@ function renderDashboardOverview() {
   }
 }
 
-// Sales overview ledger
 function renderSalesHistoryTable() {
   loadState();
   const tbody = document.querySelector('#sales-table tbody');
@@ -224,7 +349,6 @@ function renderSalesHistoryTable() {
     });
 
     tbody.innerHTML = filteredSales.map(sale => {
-      // Find corresponding quote to display exact preview PDF
       const matchingQuote = STATE.quotations.find(q => {
         const cust = STATE.customers.find(c => c.id === q.customerId);
         return cust && cust.company === sale.customerName && sale.product.includes(q.productName);
@@ -255,379 +379,730 @@ function renderSalesHistoryTable() {
 }
 
 // ------------------------------------------
-// 4. INTERACTIVE ESTIMATION ENGINE (QUOTES)
+// 4. DYNAMIC CONFIGURATOR WIZARD ENGINE
 // ------------------------------------------
 
 function initQuotationBuilder() {
-  const prodSelect = document.getElementById('quote-product-select');
-  const tempSelect = document.getElementById('quote-template-select');
-  const addCustomBtn = document.getElementById('btn-add-custom-item');
-  const approveBtn = document.getElementById('btn-approve-quote');
-  const saveDraftBtn = document.getElementById('btn-save-draft');
-
-  loadCustomerDropdowns();
-
-  prodSelect.onchange = (e) => {
-    generateTemplateDropdown(e.target.value);
-    generateDynamicSpecs(e.target.value);
-    calculateQuotePricing();
-  };
-
-  tempSelect.onchange = () => {
-    calculateQuotePricing();
-  };
-
-  addCustomBtn.onclick = () => {
-    addCustomItemRow();
-  };
-
-  approveBtn.onclick = () => {
-    submitApprovedQuotation();
-  };
-
-  saveDraftBtn.onclick = () => {
-    saveQuotationDraft();
-  };
-
-  generateTemplateDropdown('flatbed');
-  generateDynamicSpecs('flatbed');
-  calculateQuotePricing();
-}
-
-function loadCustomerDropdowns() {
-  loadState();
-  const select = document.getElementById('quote-cust-select');
-  select.innerHTML = STATE.customers.map(c => `
-    <option value="${c.id}">${c.company} (${c.name})</option>
-  `).join('') + `<option value="NEW">-- Create New Client profile --</option>`;
-
-  select.onchange = (e) => {
-    if (e.target.value === 'NEW') {
-      document.getElementById('quote-cust-name').value = '';
-      document.getElementById('quote-cust-name').placeholder = 'Enter Company Name';
-      document.getElementById('quote-cust-gst').value = '';
-      document.getElementById('quote-cust-gst').placeholder = '33AAAAA1111A1Z1';
-    } else {
-      const cust = STATE.customers.find(c => c.id === e.target.value);
-      document.getElementById('quote-cust-name').value = cust.company;
-      document.getElementById('quote-cust-gst').value = cust.gst;
+  // Bind inputs auto-save visual feedback
+  const autoSaveInputs = [
+    'w-cust-name', 'w-cust-company', 'w-cust-gst', 'w-cust-phone',
+    'w-cust-email', 'w-cust-salesperson', 'w-cust-model', 'w-cust-chassis',
+    'w-cust-qty', 'w-cust-address', 'w-cust-date'
+  ];
+  
+  autoSaveInputs.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('input', () => {
+        simulateDraftAutoSave();
+      });
     }
-  };
-
-  if (STATE.customers.length > 0) {
-    document.getElementById('quote-cust-name').value = STATE.customers[0].company;
-    document.getElementById('quote-cust-gst').value = STATE.customers[0].gst;
-  }
-}
-
-function generateTemplateDropdown(productKey) {
-  const tempSelect = document.getElementById('quote-template-select');
-  const templates = STATE.products[productKey].templates;
-  tempSelect.innerHTML = templates.map(t => `<option value="${t}">${t}</option>`).join('');
-}
-
-function generateDynamicSpecs(productKey) {
-  const container = document.getElementById('quote-specs-container');
-  const specs = STATE.products[productKey].specs;
-
-  container.innerHTML = specs.map(spec => `
-    <div class="form-group">
-      <label for="spec-${spec.id}">${spec.name}</label>
-      <select id="spec-${spec.id}" class="form-control spec-parameter-input">
-        ${spec.options.map(opt => `
-          <option value="${opt.name}" data-pricediff="${opt.priceDiff}">
-            ${opt.name} ${opt.priceDiff !== 0 ? `(${opt.priceDiff > 0 ? '+' : ''}₹${opt.priceDiff.toLocaleString('en-IN')})` : '(Included)'}
-          </option>
-        `).join('')}
-      </select>
-    </div>
-  `).join('');
-
-  const inputs = document.querySelectorAll('.spec-parameter-input');
-  inputs.forEach(input => {
-    input.onchange = () => {
-      calculateQuotePricing();
-    };
   });
 }
 
-function addCustomItemRow() {
-  const container = document.getElementById('quote-custom-items-list');
-  const id = `item-${Date.now()}`;
+function startNewQuotationWizard() {
+  wizardState = {
+    currentStep: 1,
+    customer: {},
+    category: '',
+    subtype: '',
+    capacity: '',
+    specs: {},
+    customMods: [],
+    status: 'Draft',
+    total: 0
+  };
+
+  // Reset inputs
+  document.getElementById('w-cust-name').value = '';
+  document.getElementById('w-cust-company').value = '';
+  document.getElementById('w-cust-gst').value = '';
+  document.getElementById('w-cust-phone').value = '';
+  document.getElementById('w-cust-email').value = '';
+  document.getElementById('w-cust-salesperson').value = 'Prashanth kumar M P';
+  document.getElementById('w-cust-model').value = '';
+  document.getElementById('w-cust-chassis').value = '';
+  document.getElementById('w-cust-qty').value = '1';
+  document.getElementById('w-cust-address').value = '';
+  document.getElementById('w-cust-date').value = new Date().toISOString().split('T')[0];
+
+  // Reset categories
+  document.querySelectorAll('.category-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('btn-cat-next').disabled = true;
+
+  // Reset subtypes
+  document.querySelectorAll('.subtype-card').forEach(c => c.classList.remove('selected'));
+  document.getElementById('btn-sub-next').disabled = true;
+  document.getElementById('capacity-selector-container').style.display = 'none';
+  document.querySelectorAll('.capacity-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('capacity-custom-input-wrap').style.display = 'none';
+  document.getElementById('w-custom-capacity-val').value = '';
+
+  // Clean Custom modifications list
+  document.getElementById('w-custom-mods-list').innerHTML = '';
+
+  jumpToWizardStep(1);
+}
+
+function simulateDraftAutoSave() {
+  const ind = document.getElementById('quote-autosave-ind');
+  if (ind) {
+    ind.style.opacity = '1';
+    gsap.fromTo(ind, { scale: 0.95 }, { scale: 1, duration: 0.2 });
+    setTimeout(() => {
+      gsap.to(ind, { opacity: 0.6, duration: 0.4 });
+    }, 1000);
+  }
+}
+
+window.jumpToWizardStep = function(stepNum) {
+  // Simple validation for jumps
+  if (stepNum > 1 && !validateStepInputs(1)) {
+    return;
+  }
+  if (stepNum > 2 && !wizardState.category) {
+    alert("Please select a Product Category first.");
+    return;
+  }
+  if (stepNum > 3 && !wizardState.subtype) {
+    alert("Please select a Sub-product model first.");
+    return;
+  }
+
+  // Hide all panels
+  document.querySelectorAll('.wizard-panel').forEach(panel => {
+    panel.classList.remove('active');
+  });
+
+  // Show active panel
+  const activePanel = document.getElementById(`wizard-step-${stepNum}-panel`);
+  if (activePanel) {
+    activePanel.classList.add('active');
+  }
+
+  // Update progress tracker nodes
+  document.querySelectorAll('.wizard-step-node').forEach(node => {
+    const s = parseInt(node.getAttribute('data-step'), 10);
+    node.classList.remove('active', 'completed');
+    if (s === stepNum) {
+      node.classList.add('active');
+    } else if (s < stepNum) {
+      node.classList.add('completed');
+    }
+  });
+
+  // Fill progress line width
+  const progressFill = document.getElementById('wizard-progress-fill');
+  if (progressFill) {
+    const widthPercentage = ((stepNum - 1) / 4) * 100;
+    progressFill.style.width = `${widthPercentage}%`;
+  }
+
+  wizardState.currentStep = stepNum;
+
+  // Compile final sheet if step 5
+  if (stepNum === 5) {
+    generateQuotationFinalReview();
+  }
+};
+
+function validateStepInputs(stepNum) {
+  if (stepNum === 1) {
+    const name = document.getElementById('w-cust-name').value;
+    const company = document.getElementById('w-cust-company').value;
+    const gst = document.getElementById('w-cust-gst').value;
+    const phone = document.getElementById('w-cust-phone').value;
+    const email = document.getElementById('w-cust-email').value;
+    const model = document.getElementById('w-cust-model').value;
+    const address = document.getElementById('w-cust-address').value;
+
+    if (!name || !company || !gst || !phone || !email || !model || !address) {
+      alert("Please fill in all customer details fields to continue.");
+      return false;
+    }
+
+    // Save step 1 to state
+    wizardState.customer = {
+      name,
+      company,
+      gst,
+      phone,
+      email,
+      address,
+      salesperson: document.getElementById('w-cust-salesperson').value,
+      model,
+      chassis: document.getElementById('w-cust-chassis').value || 'NA-CHASSIS',
+      qty: parseInt(document.getElementById('w-cust-qty').value, 10) || 1,
+      date: document.getElementById('w-cust-date').value
+    };
+  }
+  return true;
+}
+
+window.advanceWizardStep = function(targetStep) {
+  if (targetStep > wizardState.currentStep) {
+    if (!validateStepInputs(wizardState.currentStep)) return;
+  }
+  jumpToWizardStep(targetStep);
+};
+
+// Step 2 Category select
+window.selectProductCategory = function(catKey) {
+  wizardState.category = catKey;
   
-  const rowHtml = `
-    <div class="custom-item-row" id="${id}">
+  document.querySelectorAll('.category-card').forEach(card => {
+    card.classList.remove('selected');
+  });
+  document.getElementById(`cat-card-${catKey}`).classList.add('selected');
+  document.getElementById('btn-cat-next').disabled = false;
+
+  // Toggle dynamic sub-panels
+  document.querySelectorAll('.subtype-grid-group').forEach(grid => {
+    grid.style.display = 'none';
+  });
+  document.getElementById(`subtypes-${catKey}-container`).style.display = 'grid';
+
+  simulateDraftAutoSave();
+};
+
+// Step 3 Subtype select
+window.selectProductSubtype = function(subtypeKey) {
+  wizardState.subtype = subtypeKey;
+  
+  document.querySelectorAll('.subtype-card').forEach(card => {
+    card.classList.remove('selected');
+  });
+  document.getElementById(`sub-card-${subtypeKey}`).classList.add('selected');
+
+  const capacitySelector = document.getElementById('capacity-selector-container');
+  if (subtypeKey === 'boxbody' || subtypeKey === 'rockbody') {
+    capacitySelector.style.display = 'block';
+    // Clear capacity until clicked
+    wizardState.capacity = '';
+    document.querySelectorAll('.capacity-btn').forEach(b => b.classList.remove('selected'));
+    document.getElementById('btn-sub-next').disabled = true;
+  } else {
+    capacitySelector.style.display = 'none';
+    wizardState.capacity = 'NA';
+    document.getElementById('btn-sub-next').disabled = false;
+    loadDefaultSpecsForSubtype(subtypeKey);
+  }
+
+  simulateDraftAutoSave();
+};
+
+// Step 3.5 capacity select
+window.selectChassisCapacity = function(capValue) {
+  wizardState.capacity = capValue;
+  
+  document.querySelectorAll('.capacity-btn').forEach(btn => {
+    btn.classList.remove('selected');
+  });
+  
+  if (capValue === 'Custom') {
+    document.getElementById('cap-btn-custom').classList.add('selected');
+    document.getElementById('capacity-custom-input-wrap').style.display = 'block';
+    document.getElementById('btn-sub-next').disabled = true; // Wait for custom input value
+  } else {
+    document.getElementById(`cap-btn-${capValue.split(' ')[0]}`).classList.add('selected');
+    document.getElementById('capacity-custom-input-wrap').style.display = 'none';
+    document.getElementById('btn-sub-next').disabled = false;
+    loadDefaultSpecsForSubtype(wizardState.subtype);
+  }
+
+  simulateDraftAutoSave();
+};
+
+window.updateCustomCapacityValue = function() {
+  const customVal = document.getElementById('w-custom-capacity-val').value;
+  if (customVal.trim().length > 0) {
+    wizardState.capacity = `${customVal} CBM (Custom)`;
+    document.getElementById('btn-sub-next').disabled = false;
+    loadDefaultSpecsForSubtype(wizardState.subtype);
+  } else {
+    document.getElementById('btn-sub-next').disabled = true;
+  }
+};
+
+// Step 4 Load Default specs
+function loadDefaultSpecsForSubtype(subtypeKey) {
+  const template = WIZARD_PRODUCT_TEMPLATES[subtypeKey];
+  if (!template) return;
+
+  // Initialize specs with defaults
+  wizardState.specs = {};
+  template.specs.forEach(spec => {
+    wizardState.specs[spec.id] = spec.defaultValue;
+  });
+
+  // Inject Form Controls into sections
+  renderConfiguratorFormInputs(template);
+  calculateWizardPricing();
+}
+
+function renderConfiguratorFormInputs(template) {
+  const sections = ['material', 'chassis', 'hydraulic', 'painting', 'accessories', 'dimensions'];
+  
+  sections.forEach(secId => {
+    const container = document.getElementById(`specs-${secId}-controls-inject`);
+    if (!container) return;
+
+    // Filter specs for this section
+    const secSpecs = template.specs.filter(s => s.section === secId);
+    
+    if (secSpecs.length === 0) {
+      container.innerHTML = '<span class="section-hint col-span-2">No specifications modifications needed for this module.</span>';
+      return;
+    }
+
+    container.innerHTML = secSpecs.map(spec => {
+      let controlHtml = '';
+
+      if (spec.type === 'dropdown') {
+        controlHtml = `
+          <select id="w-spec-${spec.id}" class="form-control" onchange="updateSpecValueState('${spec.id}', this.value)">
+            ${spec.options.map(opt => {
+              const diff = spec.priceDiffs && spec.priceDiffs[opt] ? spec.priceDiffs[opt] : 0;
+              return `<option value="${opt}" ${opt === spec.defaultValue ? 'selected' : ''}>
+                ${opt} ${diff !== 0 ? `(${diff > 0 ? '+' : ''}₹${diff.toLocaleString('en-IN')})` : '(Included)'}
+              </option>`;
+            }).join('')}
+          </select>
+        `;
+      } else if (spec.type === 'radio') {
+        controlHtml = `
+          <div class="radio-group">
+            ${spec.options.map((opt, i) => {
+              const diff = spec.priceDiffs && spec.priceDiffs[opt] ? spec.priceDiffs[opt] : 0;
+              return `
+                <label class="radio-label">
+                  <input type="radio" name="w-spec-radio-${spec.id}" value="${opt}" ${opt === spec.defaultValue ? 'checked' : ''} onchange="updateSpecValueState('${spec.id}', this.value)">
+                  ${opt} ${diff !== 0 ? `<span style="font-size:0.75rem;color:var(--color-text-muted);">(${diff > 0 ? '+' : ''}₹${diff.toLocaleString('en-IN')})</span>` : ''}
+                </label>
+              `;
+            }).join('')}
+          </div>
+        `;
+      } else if (spec.type === 'checkbox') {
+        controlHtml = `
+          <div class="checkbox-group">
+            <label class="checkbox-label">
+              <input type="checkbox" id="w-spec-${spec.id}" ${spec.defaultValue === 'Yes' ? 'checked' : ''} onchange="updateSpecValueState('${spec.id}', this.checked ? 'Yes' : 'No')">
+              Fitted in Standard Assembly
+            </label>
+          </div>
+        `;
+      } else if (spec.type === 'text') {
+        controlHtml = `
+          <input type="text" id="w-spec-${spec.id}" class="form-control" value="${spec.defaultValue}" oninput="updateSpecValueState('${spec.id}', this.value)">
+        `;
+      }
+
+      return `
+        <div class="spec-control-group">
+          <label style="font-size:0.775rem;font-weight:600;color:var(--color-text-dark);">${spec.name}</label>
+          ${controlHtml}
+        </div>
+      `;
+    }).join('');
+  });
+
+  // Render Dimensions section (Length, Height, Width)
+  const dimsContainer = document.getElementById('specs-dimensions-controls-inject');
+  if (dimsContainer && template.dimensions) {
+    dimsContainer.innerHTML = `
+      <div class="spec-control-group">
+        <label style="font-size:0.775rem;font-weight:600;">Overall Frame Length</label>
+        <input type="text" id="w-dim-length" class="form-control" value="${template.dimensions.length}" oninput="simulateDraftAutoSave()">
+      </div>
+      <div class="spec-control-group">
+        <label style="font-size:0.775rem;font-weight:600;">Side Wall Height</label>
+        <input type="text" id="w-dim-height" class="form-control" value="${template.dimensions.height}" oninput="simulateDraftAutoSave()">
+      </div>
+      <div class="spec-control-group">
+        <label style="font-size:0.775rem;font-weight:600;">Overall Width</label>
+        <input type="text" id="w-dim-width" class="form-control" value="${template.dimensions.width}" oninput="simulateDraftAutoSave()">
+      </div>
+    `;
+  }
+}
+
+window.toggleCollapseSection = function(secId) {
+  const el = document.getElementById(secId);
+  if (el) {
+    el.classList.toggle('collapsed');
+  }
+};
+
+window.updateSpecValueState = function(specId, val) {
+  wizardState.specs[specId] = val;
+  calculateWizardPricing();
+  simulateDraftAutoSave();
+};
+
+// Custom Mods row builders
+window.addWizardCustomModRow = function() {
+  const container = document.getElementById('w-custom-mods-list');
+  const id = `mod-${Date.now()}`;
+
+  const html = `
+    <div class="custom-item-row" id="${id}" style="margin-top:10px;">
       <div class="form-group mb-none">
-        <label>Item Description</label>
-        <input type="text" class="form-control form-control-sm item-desc-input" placeholder="GPS Tracker, winches..." required>
+        <label>Modification Name</label>
+        <input type="text" class="form-control form-control-sm mod-name-input" placeholder="e.g. Extra Heavy Toolbox" required>
       </div>
       <div class="form-group mb-none">
         <label>Qty</label>
-        <input type="number" class="form-control form-control-sm item-qty-input" value="1" min="1" required>
+        <input type="number" class="form-control form-control-sm mod-qty-input" value="1" min="1" required>
       </div>
       <div class="form-group mb-none">
-        <label>Price per unit (₹)</label>
-        <input type="number" class="form-control form-control-sm item-price-input" placeholder="15000" min="0" required>
+        <label>Price (₹)</label>
+        <input type="number" class="form-control form-control-sm mod-price-input" placeholder="12000" min="0" required>
       </div>
-      <button type="button" class="btn-remove-row" onclick="removeCustomItemRow('${id}')">
+      <button type="button" class="btn-remove-row" onclick="removeWizardCustomModRow('${id}')" style="margin-top:20px;">
         <svg class="icon-sm" viewBox="0 0 24 24" style="width:14px;height:14px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
       </button>
     </div>
   `;
-  container.insertAdjacentHTML('beforeend', rowHtml);
+  container.insertAdjacentHTML('beforeend', html);
 
   const row = document.getElementById(id);
   row.querySelectorAll('input').forEach(input => {
-    input.oninput = () => calculateQuotePricing();
+    input.oninput = () => {
+      calculateWizardPricing();
+      simulateDraftAutoSave();
+    };
   });
-}
+};
 
-window.removeCustomItemRow = function(id) {
+window.removeWizardCustomModRow = function(id) {
   const row = document.getElementById(id);
   if (row) {
     row.remove();
-    calculateQuotePricing();
+    calculateWizardPricing();
+    simulateDraftAutoSave();
   }
 };
 
-function calculateQuotePricing() {
-  const productKey = document.getElementById('quote-product-select').value;
-  const product = STATE.products[productKey];
-  const template = document.getElementById('quote-template-select').value;
-  
-  const sheet = document.getElementById('quote-summary-sheet');
-  if (!sheet) return;
+// Step 4 pricing calculator
+function calculateWizardPricing() {
+  const template = WIZARD_PRODUCT_TEMPLATES[wizardState.subtype];
+  if (!template) return;
 
-  let basePrice = product.basePrice;
-  let specUpgradesHtml = '';
-  let specsTotalDiff = 0;
+  let basePrice = template.basePrice;
+  let upgradesHtml = '';
+  let upgradesTotal = 0;
 
-  const specInputs = document.querySelectorAll('.spec-parameter-input');
-  specInputs.forEach(input => {
-    const selectedOpt = input.options[input.selectedIndex];
-    if (selectedOpt) {
-      let priceDiff = parseFloat(selectedOpt.getAttribute('data-pricediff')) || 0;
+  // Calculate Spec Upgrades
+  template.specs.forEach(spec => {
+    const selectedVal = wizardState.specs[spec.id];
+    if (selectedVal && spec.priceDiffs && spec.priceDiffs[selectedVal]) {
+      let diff = spec.priceDiffs[selectedVal];
       
-      const specId = input.getAttribute('id').replace('spec-', '');
-      const optVal = input.value;
+      // Override floor/steel axle price differentials using global configurations if applicable
+      if (spec.id === 'floor' && selectedVal.includes('6mm')) diff = STATE.adminPricing.floor6;
+      if (spec.id === 'floor' && selectedVal.includes('10mm')) diff = STATE.adminPricing.floor10;
+      if (spec.id === 'beam' && selectedVal.includes('Hardox')) diff = STATE.adminPricing.steelHardox;
+      if (spec.id === 'axles' && selectedVal.includes('2x13T')) diff = STATE.adminPricing.axle2;
+      if (spec.id === 'axles' && selectedVal.includes('3x16T')) diff = STATE.adminPricing.axle3_16;
 
-      if (specId === 'floor') {
-        if (optVal.includes('6mm')) priceDiff = STATE.adminPricing.floor6;
-        if (optVal.includes('10mm')) priceDiff = STATE.adminPricing.floor10;
-      } else if (specId === 'steel') {
-        if (optVal.includes('Hardox')) priceDiff = STATE.adminPricing.steelHardox;
-      } else if (specId === 'axles') {
-        if (optVal.includes('2 x 13T')) priceDiff = STATE.adminPricing.axle2;
-        if (optVal.includes('3 x 16T')) priceDiff = STATE.adminPricing.axle3_16;
-      }
-
-      specsTotalDiff += priceDiff;
-
-      if (priceDiff !== 0) {
-        specUpgradesHtml += `
+      upgradesTotal += diff;
+      if (diff !== 0) {
+        upgradesHtml += `
           <div class="preview-row indent">
-            <span>+ ${selectedOpt.value}</span>
-            <span>₹${priceDiff.toLocaleString('en-IN')}</span>
+            <span>+ Upgrade: ${spec.name} (${selectedVal})</span>
+            <span>₹${diff.toLocaleString('en-IN')}</span>
           </div>
         `;
       }
     }
   });
 
-  let customItemsTotal = 0;
-  let customItemsHtml = '';
-  const customRows = document.querySelectorAll('.custom-item-row');
-  
-  currentCustomItems = [];
-  customRows.forEach(row => {
-    const desc = row.querySelector('.item-desc-input').value || 'Custom Item';
-    const qty = parseInt(row.querySelector('.item-qty-input').value, 10) || 1;
-    const price = parseFloat(row.querySelector('.item-price-input').value) || 0;
-    const lineTotal = qty * price;
-    
-    customItemsTotal += lineTotal;
-    currentCustomItems.push({ name: desc, price: price, qty: qty });
+  // Calculate Custom Mods
+  let modsTotal = 0;
+  let modsHtml = '';
+  wizardState.customMods = [];
 
-    customItemsHtml += `
-      <div class="preview-row indent">
-        <span>+ ${desc} (x${qty})</span>
-        <span>₹${lineTotal.toLocaleString('en-IN')}</span>
+  const rows = document.querySelectorAll('#w-custom-mods-list .custom-item-row');
+  rows.forEach(row => {
+    const name = row.querySelector('.mod-name-input').value || 'Custom Modification';
+    const qty = parseInt(row.querySelector('.mod-qty-input').value, 10) || 1;
+    const price = parseFloat(row.querySelector('.mod-price-input').value) || 0;
+    const lineTotal = qty * price;
+
+    modsTotal += lineTotal;
+    wizardState.customMods.push({ name, qty, price });
+    
+    if (lineTotal > 0) {
+      modsHtml += `
+        <div class="preview-row indent">
+          <span>+ Modification: ${name} (x${qty})</span>
+          <span>₹${lineTotal.toLocaleString('en-IN')}</span>
+        </div>
+      `;
+    }
+  });
+
+  const basicAmount = basePrice + upgradesTotal + modsTotal;
+  const gstVal = Math.round(basicAmount * 0.18);
+  const grandTotal = basicAmount + gstVal;
+  
+  wizardState.total = grandTotal;
+
+  // Render summary panel
+  const summarySheet = document.getElementById('w-live-summary-sheet');
+  if (summarySheet) {
+    summarySheet.innerHTML = `
+      <div class="preview-row" style="font-weight:700">
+        <span>Base ${template.name}</span>
+        <span>₹${basePrice.toLocaleString('en-IN')}</span>
       </div>
+      
+      ${upgradesHtml ? `
+        <div class="mb-xs mt-xs"><span style="font-size:0.7rem;color:var(--color-text-muted);text-transform:uppercase;">Technical Parameters Upgrades:</span></div>
+        ${upgradesHtml}
+      ` : ''}
+
+      ${modsHtml ? `
+        <div class="mb-xs mt-xs"><span style="font-size:0.7rem;color:var(--color-text-muted);text-transform:uppercase;">Custom Modifications:</span></div>
+        ${modsHtml}
+      ` : ''}
+
+      <div class="preview-row mt-md" style="border-top: 1px dashed rgba(0,0,0,0.15); padding-top:10px;">
+        <span>Chassis Basic Total</span>
+        <span>₹${basicAmount.toLocaleString('en-IN')}</span>
+      </div>
+      <div class="preview-row">
+        <span>GST (18%)</span>
+        <span>₹${gstVal.toLocaleString('en-IN')}</span>
+      </div>
+      <div class="preview-row total" style="color:var(--color-primary)">
+        <span>Grand Total</span>
+        <span>₹${grandTotal.toLocaleString('en-IN')}</span>
+      </div>
+    `;
+  }
+}
+
+// Step 5: Final Quotation Mock Preview Populate
+function generateQuotationFinalReview() {
+  const template = WIZARD_PRODUCT_TEMPLATES[wizardState.subtype];
+  if (!template) return;
+
+  const quoteId = `QT-2026-00${STATE.quotations.length + 1}`;
+  const c = wizardState.customer;
+
+  // Pre-calculations
+  const grandTotal = wizardState.total;
+  const basicAmount = Math.round(grandTotal / 1.18);
+  const gstAmount = grandTotal - basicAmount;
+
+  // Set standard PDF preview tags
+  document.getElementById('w-pdf-ref-no').innerText = `REF:- NEXFRA-QTN/2026/${STATE.quotations.length + 1}`;
+  document.getElementById('w-pdf-date-val').innerText = `DATE: ${new Date(c.date).toLocaleDateString('en-GB').replace(/\//g,'.')}`;
+  
+  document.getElementById('w-pdf-to-company').innerText = `M/s ${c.company.toUpperCase()}`;
+  document.getElementById('w-pdf-to-address-1').innerText = c.address.substring(0, 45);
+  document.getElementById('w-pdf-to-address-2').innerText = c.address.substring(45) || 'Registered Office';
+  document.getElementById('w-pdf-to-gst').innerText = `GST NO: ${c.gst}`;
+
+  const capacityLabel = wizardState.capacity && wizardState.capacity !== 'NA' ? `${wizardState.capacity} ` : '';
+  document.getElementById('w-pdf-subj-text').innerText = `Subject: Quotation for -${c.model.toUpperCase()} , ${capacityLabel}${template.name.toUpperCase()} with sub frame and Hydraulic Kit`;
+  document.getElementById('w-pdf-table-desc').innerHTML = `${capacityLabel}${template.name.toUpperCase()} WITH SUBFRAME and CYLINDER KIT<br>Regular TAIL DOOR ${c.model}`;
+
+  // Price columns
+  document.getElementById('w-pdf-table-basic').innerText = formatPdfPrice(basicAmount);
+  document.getElementById('w-pdf-table-gst').innerText = formatPdfPrice(gstAmount);
+  document.getElementById('w-pdf-table-total').innerText = formatPdfPrice(basicAmount);
+  document.getElementById('w-pdf-table-gst-total').innerText = formatPdfPrice(gstAmount);
+
+  document.getElementById('w-pdf-grand-total-label').innerText = formatPdfPrice(grandTotal);
+  document.getElementById('w-pdf-grand-total-val').innerText = formatPdfPrice(grandTotal);
+
+  document.getElementById('w-pdf-words-val').innerText = priceToIndianWords(grandTotal);
+
+  // Specifications
+  const specsTable = document.getElementById('w-pdf-specs-list-table');
+  let specsListHtml = '';
+  let count = 1;
+
+  // Add category dimensions
+  const lenVal = document.getElementById('w-dim-length') ? document.getElementById('w-dim-length').value : template.dimensions.length;
+  const heightVal = document.getElementById('w-dim-height') ? document.getElementById('w-dim-height').value : template.dimensions.height;
+  const widthVal = document.getElementById('w-dim-width') ? document.getElementById('w-dim-width').value : template.dimensions.width;
+
+  // Populate spec list elements dynamically
+  Object.keys(wizardState.specs).forEach(key => {
+    const specInfo = template.specs.find(s => s.id === key);
+    if (specInfo) {
+      specsListHtml += `
+        <tr>
+          <td>${count++}.</td>
+          <td>${specInfo.name}: <strong>${wizardState.specs[key]}</strong></td>
+        </tr>
+      `;
+    }
+  });
+
+  // Add dimensions to specs checklist
+  specsListHtml += `
+    <tr><td>${count++}.</td><td>Overall Length Dimension: <strong>${lenVal}</strong></td></tr>
+    <tr><td>${count++}.</td><td>Side Gate Height Dimension: <strong>${heightVal}</strong></td></tr>
+    <tr><td>${count++}.</td><td>Overall Frame Width Dimension: <strong>${widthVal}</strong></td></tr>
+  `;
+
+  // Attach Custom accessories if added
+  wizardState.customMods.forEach(mod => {
+    specsListHtml += `
+      <tr>
+        <td>${count++}.</td>
+        <td>Fitted Accessory: <strong>${mod.name} (Qty: ${mod.qty})</strong></td>
+      </tr>
     `;
   });
 
-  const basicAmount = basePrice + specsTotalDiff + customItemsTotal;
-  const gstAmount = Math.round(basicAmount * 0.18);
-  const grandTotal = basicAmount + gstAmount;
+  specsTable.innerHTML = specsListHtml;
 
-  sheet.innerHTML = `
-    <div class="preview-row" style="font-weight:600">
-      <span>Base Chassis Template (${template})</span>
-      <span>₹${basePrice.toLocaleString('en-IN')}</span>
-    </div>
-    
-    ${specUpgradesHtml ? `
-      <div class="mb-xs"><span style="font-size:0.75rem;color:#9CA3AF;text-transform:uppercase">Specs upgrades:</span></div>
-      ${specUpgradesHtml}
-    ` : ''}
-
-    ${customItemsHtml ? `
-      <div class="mb-xs mt-xs"><span style="font-size:0.75rem;color:#9CA3AF;text-transform:uppercase">Accessories:</span></div>
-      ${customItemsHtml}
-    ` : ''}
-
-    <div class="preview-row mt-md" style="border-top:1px dashed rgba(255,255,255,0.1);padding-top:10px">
-      <span>Basic Amount</span>
-      <span>₹${basicAmount.toLocaleString('en-IN')}</span>
-    </div>
-    <div class="preview-row">
-      <span>GST (18%)</span>
-      <span>₹${gstAmount.toLocaleString('en-IN')}</span>
-    </div>
-    <div class="preview-row total">
-      <span>Grand Total</span>
-      <span>₹${grandTotal.toLocaleString('en-IN')}</span>
-    </div>
-  `;
-
-  document.getElementById('quote-builder-form').setAttribute('data-current-total', grandTotal);
+  // Toggle Work Order conversion block
+  updateQuotationStatusState();
 }
 
-function saveQuotationDraft() {
-  const form = document.getElementById('quote-builder-form');
-  const productKey = document.getElementById('quote-product-select').value;
-  const productName = STATE.products[productKey].name;
-  const total = parseFloat(form.getAttribute('data-current-total')) || 0;
-  
-  const custSelect = document.getElementById('quote-cust-select');
-  let customerId = custSelect.value;
-  let customerName = document.getElementById('quote-cust-name').value;
+window.updateQuotationStatusState = function() {
+  const status = document.getElementById('w-quote-status').value;
+  wizardState.status = status;
 
-  if (customerId === 'NEW') {
-    customerId = `CUST-00${STATE.customers.length + 1}`;
-    STATE.customers.push({
-      id: customerId,
-      name: customerName,
-      company: customerName,
-      gst: document.getElementById('quote-cust-gst').value || 'Pending',
-      phone: '+91-Admin Draft',
-      email: 'admin@draft.com',
-      address: 'Created during quote configuration',
-      vehicles: [],
-      outstanding: 0
-    });
-  }
-
-  const quoteId = `QT-2026-00${STATE.quotations.length + 1}`;
-  const specs = {};
-  document.querySelectorAll('.spec-parameter-input').forEach(input => {
-    const specId = input.getAttribute('id').replace('spec-', '');
-    specs[specId] = input.value;
-  });
-
-  STATE.quotations.push({
-    id: quoteId,
-    customerId,
-    productName,
-    date: new Date().toISOString().split('T')[0],
-    total,
-    status: 'Draft',
-    specs,
-    customItems: currentCustomItems
-  });
-
-  logSystemActivity(`Quotation draft ${quoteId} created for client: ${customerName}.`);
-  saveState();
-  
-  // Show PDF Preview immediately
-  openPdfPreview(quoteId);
-}
-
-function submitApprovedQuotation() {
-  const form = document.getElementById('quote-builder-form');
-  const productKey = document.getElementById('quote-product-select').value;
-  const productName = STATE.products[productKey].name;
-  const total = parseFloat(form.getAttribute('data-current-total')) || 0;
-  
-  const custSelect = document.getElementById('quote-cust-select');
-  let customerId = custSelect.value;
-  let customerName = document.getElementById('quote-cust-name').value;
-  let gstNum = document.getElementById('quote-cust-gst').value;
-
-  if (!customerName) {
-    alert('Please enter a valid Customer Name.');
-    return;
-  }
-
-  if (customerId === 'NEW') {
-    customerId = `CUST-00${STATE.customers.length + 1}`;
-    STATE.customers.push({
-      id: customerId,
-      name: customerName,
-      company: customerName,
-      gst: gstNum || 'Pending',
-      phone: '+91-Admin Approved',
-      email: 'admin@approved.com',
-      address: 'Registered via Estimation Builder',
-      vehicles: [],
-      outstanding: total
-    });
+  const woBox = document.getElementById('w-convert-wo-box');
+  if (status === 'Approved') {
+    woBox.style.display = 'block';
   } else {
-    const c = STATE.customers.find(x => x.id === customerId);
-    if (c) c.outstanding += total;
+    woBox.style.display = 'none';
+  }
+};
+
+window.saveWizardQuotation = function() {
+  loadState();
+  const c = wizardState.customer;
+  const quoteId = `QT-2026-00${STATE.quotations.length + 1}`;
+
+  // 1. Create/Update Client Profile
+  let client = STATE.customers.find(x => x.company.toLowerCase() === c.company.toLowerCase());
+  if (!client) {
+    client = {
+      id: `CUST-00${STATE.customers.length + 1}`,
+      name: c.name,
+      company: c.company,
+      gst: c.gst,
+      phone: c.phone,
+      email: c.email,
+      address: c.address,
+      vehicles: [],
+      outstanding: wizardState.status === 'Approved' ? wizardState.total : 0
+    };
+    STATE.customers.push(client);
+  } else {
+    if (wizardState.status === 'Approved') {
+      client.outstanding += wizardState.total;
+    }
   }
 
-  const quoteId = `QT-2026-00${STATE.quotations.length + 1}`;
-  const specsList = [];
-  const specs = {};
-  document.querySelectorAll('.spec-parameter-input').forEach(input => {
-    specsList.push(input.value);
-    const specId = input.getAttribute('id').replace('spec-', '');
-    specs[specId] = input.value;
-  });
+  // Add chassis model to client vehicles if approved
+  if (wizardState.status === 'Approved' && !client.vehicles.includes(c.model)) {
+    client.vehicles.push(c.model);
+  }
 
+  // 2. Save quote record
   STATE.quotations.push({
     id: quoteId,
-    customerId,
-    productName,
-    date: new Date().toISOString().split('T')[0],
-    total,
-    status: 'Approved',
-    specs,
-    customItems: currentCustomItems
+    customerId: client.id,
+    productName: WIZARD_PRODUCT_TEMPLATES[wizardState.subtype].name,
+    date: c.date,
+    total: wizardState.total,
+    status: wizardState.status,
+    specs: wizardState.specs,
+    customItems: wizardState.customMods
   });
 
-  const invoiceId = `INV-2026-${Math.floor(883 + Math.random()*100)}`;
-  STATE.sales.push({
-    invoiceId,
-    customerName,
-    product: `${productName} (${document.getElementById('quote-template-select').value})`,
-    date: new Date().toISOString().split('T')[0],
-    amount: total,
-    status: 'Unpaid'
-  });
+  // 3. Save invoice if approved
+  if (wizardState.status === 'Approved') {
+    const invoiceId = `INV-2026-${Math.floor(883 + Math.random()*100)}`;
+    STATE.sales.push({
+      invoiceId,
+      customerName: c.company,
+      product: `${WIZARD_PRODUCT_TEMPLATES[wizardState.subtype].name} (${wizardState.capacity})`,
+      date: c.date,
+      amount: wizardState.total,
+      status: 'Unpaid'
+    });
+    logSystemActivity(`Quotation ${quoteId} approved & Invoice ${invoiceId} logged.`);
+  } else {
+    logSystemActivity(`Quotation registry ${quoteId} saved as: ${wizardState.status}.`);
+  }
 
+  saveState();
+  alert(`Quotation ${quoteId} successfully saved to Nexfra Database with status: ${wizardState.status}.`);
+  switchModule('dashboard');
+};
+
+window.convertWizardToWorkOrder = function() {
+  loadState();
+  const c = wizardState.customer;
+  const template = WIZARD_PRODUCT_TEMPLATES[wizardState.subtype];
+  const quoteId = `QT-2026-00${STATE.quotations.length}`;
   const woId = `WO-2026-00${STATE.workOrders.length + 1}`;
+
+  // Compile spec dump details so production team never re-enters data
+  const specDetails = [];
+  Object.keys(wizardState.specs).forEach(key => {
+    const specInfo = template.specs.find(s => s.id === key);
+    if (specInfo) {
+      specDetails.push(`${specInfo.name}: ${wizardState.specs[key]}`);
+    }
+  });
+
+  wizardState.customMods.forEach(mod => {
+    specDetails.push(`Fitted Accessory: ${mod.name} (Qty: ${mod.qty})`);
+  });
+
   STATE.workOrders.push({
     id: woId,
     quoteId,
-    customerName,
-    product: productName,
-    date: new Date().toISOString().split('T')[0],
+    customerName: c.company,
+    product: template.name,
+    date: c.date,
     stage: 'Pending',
     progress: 0,
-    specs: specsList,
-    notes: 'Drafted and approved via ERP dashboard.'
+    specs: specDetails,
+    notes: `Configured dynamically via ERP Wizard. Sales rep: ${c.salesperson}`
   });
 
-  logSystemActivity(`Quote ${quoteId} approved. Generated Invoice ${invoiceId} & Work Order ${woId}.`);
+  logSystemActivity(`Work Order ${woId} successfully dispatched for quote: ${quoteId}.`);
   saveState();
   
-  document.getElementById('quote-custom-items-list').innerHTML = '';
+  alert(`Work Order ${woId} generated successfully! Dispatched to the shop floor factory production pipeline.`);
+  switchModule('status');
+};
+
+window.downloadWizardPdf = function() {
+  const element = document.getElementById('w-pdf-sheet-render');
+  const quoteId = `QT-2026-00${STATE.quotations.length + 1}`;
+  const opt = {
+    margin:       [0, 0, 0, 0],
+    filename:     `NEXFRA_Quotation_${quoteId}.pdf`,
+    image:        { type: 'jpeg', quality: 0.98 },
+    html2canvas:  { scale: 2, useCORS: true, letterRendering: true, scrollY: 0 },
+    jsPDF:        { unit: 'pt', format: 'a4', orientation: 'portrait' }
+  };
   
-  // Show PDF Preview immediately
-  openPdfPreview(quoteId);
-}
+  if (typeof html2pdf !== 'undefined') {
+    html2pdf().set(opt).from(element).save();
+  } else {
+    alert("PDF library loading error. Try printing vector.");
+  }
+};
+
+window.printWizardPdf = function() {
+  window.print();
+};
 
 // ------------------------------------------
 // 5. WORK ORDERS RENDERER
@@ -644,11 +1119,6 @@ function renderWorkOrders() {
   }
 
   container.innerHTML = STATE.workOrders.map(wo => {
-    const q = STATE.quotations.find(x => x.id === wo.quoteId);
-    const badgesHtml = q && q.customItems.length > 0
-      ? q.customItems.map(item => `<span class="wo-custom-badge">${item.name}</span>`).join('')
-      : '<span class="section-hint" style="font-size:0.75rem">None</span>';
-
     return `
       <div class="wo-card">
         <div class="wo-header">
@@ -680,13 +1150,6 @@ function renderWorkOrders() {
             <ul>
               ${wo.specs.map(spec => `<li><span>${spec}</span></li>`).join('')}
             </ul>
-          </div>
-          
-          <div class="wo-custom-items">
-            <h4>AUTHORIZED ACCESSORIES</h4>
-            <div class="wo-custom-list">
-              ${badgesHtml}
-            </div>
           </div>
           
           <div class="wo-notes">
@@ -759,13 +1222,6 @@ window.advanceWorkOrderStage = function(woId) {
     wo.progress = Math.round(((currentIdx + 1) / (STAGES.length - 1)) * 100);
     
     logSystemActivity(`Work Order ${woId} advanced to phase: ${nextStage} (${wo.progress}%).`);
-
-    if (nextStage === 'Ready') {
-      const sale = STATE.sales.find(s => s.customerName === wo.customerName && s.product.includes(wo.product));
-      if (sale && sale.status === 'Unpaid') {
-        logSystemActivity(`Invoice ${sale.invoiceId} outstanding flagged to intermediate status.`);
-      }
-    }
 
     const card = document.getElementById(`board-card-${woId}`);
     if (card && typeof gsap !== 'undefined') {
@@ -930,7 +1386,6 @@ function initAdminModule() {
       alert('Pricing parameters updated successfully in database.');
       
       renderAdminSettings();
-      calculateQuotePricing();
     };
   }
 }
@@ -976,7 +1431,6 @@ function closePdfPreview() {
   const modal = document.getElementById('pdf-preview-modal');
   if (modal) {
     modal.classList.remove('active');
-    // Switch to status board / dashboard view after closing newly created quote
     switchModule('status');
   }
 }
@@ -995,7 +1449,6 @@ function downloadPdf(quoteId) {
     jsPDF:        { unit: 'pt', format: 'a4', orientation: 'portrait' }
   };
   
-  // Download using html2pdf library
   if (typeof html2pdf !== 'undefined') {
     html2pdf().set(opt).from(element).save();
   } else {
@@ -1052,7 +1505,7 @@ function priceToIndianWords(num) {
   return finalResult.replace(/\s+/g, ' ');
 }
 
-// Populate preview variables matching the provided reference document
+// Global modal preview populator
 window.openPdfPreview = function(quoteId) {
   loadState();
   const quote = STATE.quotations.find(q => q.id === quoteId);
@@ -1061,7 +1514,6 @@ window.openPdfPreview = function(quoteId) {
   currentPreviewQuoteId = quoteId;
 
   const client = STATE.customers.find(c => c.id === quote.customerId);
-  const clientName = client ? client.name : 'Client Account';
   const clientCompany = client ? client.company : 'Company Name';
   const clientAddress = client ? client.address : 'Registered Address';
   const clientGst = client ? client.gst : 'Pending';
@@ -1071,30 +1523,28 @@ window.openPdfPreview = function(quoteId) {
   const basicVal = Math.round(grandTotalVal / 1.18);
   const gstVal = grandTotalVal - basicVal;
 
-  // 1. Meta values
+  // Ref details
   document.getElementById('pdf-ref-no').innerText = `REF:- NEXFRA-QTN/007.26/${quoteId.replace('QT-2026-','')}`;
   document.getElementById('pdf-date-val').innerText = `DATE: ${new Date(quote.date).toLocaleDateString('en-GB').replace(/\//g,'.')}`;
   
-  // 2. To Address values
   document.getElementById('pdf-to-company').innerText = `M/s ${clientCompany.toUpperCase()}`;
   document.getElementById('pdf-to-address-1').innerText = clientAddress.substring(0, 45);
   document.getElementById('pdf-to-address-2').innerText = clientAddress.substring(45) || 'GST Registered Address';
   document.getElementById('pdf-to-gst').innerText = `GST NO: ${clientGst}`;
 
-  // 3. Subject and Description lines
   let chassisName = 'EICHER-6035XPT';
   let capacityName = '25 CBM';
   let productFamilyText = 'TIPPER BOX BODY';
 
-  if (quote.productName === 'Flat Bed Trailer') {
+  if (quote.productName.includes('Flat Bed')) {
     chassisName = 'HEAVY HAULER';
     capacityName = '40 Ft';
     productFamilyText = 'FLAT BED TRAILER';
-  } else if (quote.productName === 'Tip Trailer') {
+  } else if (quote.productName.includes('Tip')) {
     chassisName = 'TATA PRIMA';
     capacityName = '36 CBM';
     productFamilyText = 'TIP TRAILER';
-  } else if (quote.productName === 'Rock Body Tipper') {
+  } else if (quote.productName.includes('Rock')) {
     chassisName = 'CAT-777G';
     capacityName = '16 CBM';
     productFamilyText = 'ROCK BODY TIPPER';
@@ -1103,7 +1553,6 @@ window.openPdfPreview = function(quoteId) {
   document.getElementById('pdf-subj-text').innerText = `Subject: Quotation for -${chassisName} , ${capacityName} ${productFamilyText} with sub frame and Hydraulic Kit`;
   document.getElementById('pdf-table-desc').innerHTML = `${capacityName} ${productFamilyText} WITH SUBFRAME and CYLINDER KIT<br>Regular TAIL DOOR ${chassisName}`;
 
-  // 4. Calculations table format
   document.getElementById('pdf-table-basic').innerText = formatPdfPrice(basicVal);
   document.getElementById('pdf-table-gst').innerText = formatPdfPrice(gstVal);
   document.getElementById('pdf-table-total').innerText = formatPdfPrice(basicVal);
@@ -1112,45 +1561,33 @@ window.openPdfPreview = function(quoteId) {
   document.getElementById('pdf-grand-total-label').innerText = formatPdfPrice(grandTotalVal);
   document.getElementById('pdf-grand-total-val').innerText = formatPdfPrice(grandTotalVal);
 
-  // 5. Amount in Words
   document.getElementById('pdf-words-val').innerText = priceToIndianWords(grandTotalVal);
 
-  // 6. Specifications of Work Staging (exactly 16 points mapping details)
+  // Specs lists formatting
   const specsTable = document.getElementById('pdf-specs-list-table');
-  
   let specsHtml = '';
-  // Default values loaded from parameters
-  const floorVal = quote.specs.floor || '8mm-Thk';
-  const sideVal = quote.specs.side || '6mm-Thk';
-  const cylinderVal = quote.specs.cylinder || 'Hyva 150-4stage-4520';
-  const steelVal = quote.specs.steel || 'ST-52';
+  let count = 1;
 
-  const specsList = [
-    { num: 1, label: `Floor sheet = ${floorVal} (${steelVal})` },
-    { num: 2, label: `Side board sheet = ${sideVal} (${steelVal})` },
-    { num: 3, label: `Head board sheet = 6mm Thk (${steelVal})` },
-    { num: 4, label: `Tail door sheet = 6mm-Thk (${steelVal})` },
-    { num: 5, label: `Subframe=6mm Formed Section as per Nexfra Standard` },
-    { num: 6, label: `Cylinder kit = ${cylinderVal}` },
-    { num: 7, label: `Pto = NA, Pump = Included` },
-    { num: 8, label: `Horizontal Lock System = Yes` },
-    { num: 9, label: `Painting = Epoxy Primer with PU Paint two coats each,` },
-    { num: 10, label: `Reflective tape= RTO std & guidelines` },
-    { num: 11, label: `Side Marker Lamp 6 no's and top marker lamp 2 no's` },
-    { num: 12, label: `Manual lock = Yes` },
-    { num: 13, label: `Stabilizer Body = Yes` },
-    { num: 14, label: `Tipping angle -42 to 45 degrees` },
-    { num: 15, label: `Body colour as - Option` },
-    { num: 16, label: `With all STD Fitments` }
-  ];
+  Object.keys(quote.specs).forEach(key => {
+    specsHtml += `
+      <tr>
+        <td>${count++}.</td>
+        <td>${key.toUpperCase()}: <strong>${quote.specs[key]}</strong></td>
+      </tr>
+    `;
+  });
 
-  specsTable.innerHTML = specsList.map(s => `
-    <tr>
-      <td>${s.num}.</td>
-      <td>${s.label}</td>
-    </tr>
-  `).join('');
+  if (quote.customItems && quote.customItems.length > 0) {
+    quote.customItems.forEach(item => {
+      specsHtml += `
+        <tr>
+          <td>${count++}.</td>
+          <td>Accessory: <strong>${item.name} (Qty: ${item.qty})</strong></td>
+        </tr>
+      `;
+    });
+  }
 
-  // Reveal Modal
+  specsTable.innerHTML = specsHtml;
   document.getElementById('pdf-preview-modal').classList.add('active');
 };
