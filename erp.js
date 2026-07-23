@@ -1430,10 +1430,30 @@ window.openPartPricingMatrixModal = function() {
   const container = document.getElementById('part-pricing-modal-body');
   if (!container) return;
 
+  if (!STATE.adminPricing) STATE.adminPricing = {};
+
   let html = `
     <div style="margin-bottom:16px; padding:12px; background:#EFF6FF; border-left:4px solid #3B82F6; border-radius:6px;">
       <h4 style="margin:0; font-size:0.85rem; color:#1E40AF;">Managing Component Part Prices for: <strong>${template.name}</strong></h4>
       <p style="margin:4px 0 0 0; font-size:0.75rem; color:#1D4ED8;">Adjust the price differential (₹) for each customization option. Positive values add cost (+), negative values give a discount (-).</p>
+    </div>
+
+    <!-- Metal Price per kg -->
+    <div style="margin-bottom:20px; padding:16px; background:#FFF7ED; border:1.5px solid #FED7AA; border-radius:8px;">
+      <h5 style="margin:0 0 12px 0; font-size:0.85rem; font-weight:700; color:#9A3412; text-transform:uppercase; display:flex; align-items:center; gap:6px;">
+        <svg style="width:16px;height:16px;" viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 00-2-2h-4a2 2 0 00-2 2v16"/></svg>
+        Metal Price
+      </h5>
+      <div style="display:flex; align-items:center; gap:16px; flex-wrap:wrap;">
+        <div style="display:flex; align-items:center; gap:8px; background:#ffffff; padding:8px 14px; border-radius:6px; border:1px solid #FED7AA;">
+          <span style="font-size:0.8rem; font-weight:600; color:#78350F; white-space:nowrap;">Steel (₹/kg)</span>
+          <input type="number" id="metal-price-steel" class="form-control form-control-sm" value="${STATE.adminPricing.metalPriceSteel || 0}" style="width:100px; text-align:right; font-weight:700; padding:4px 8px;" placeholder="0">
+        </div>
+        <div style="display:flex; align-items:center; gap:8px; background:#ffffff; padding:8px 14px; border-radius:6px; border:1px solid #FED7AA;">
+          <span style="font-size:0.8rem; font-weight:600; color:#78350F; white-space:nowrap;">Hardox (₹/kg)</span>
+          <input type="number" id="metal-price-hardox" class="form-control form-control-sm" value="${STATE.adminPricing.metalPriceHardox || 0}" style="width:100px; text-align:right; font-weight:700; padding:4px 8px;" placeholder="0">
+        </div>
+      </div>
     </div>
 
     <div style="margin-bottom:20px; position:relative;">
@@ -1512,6 +1532,11 @@ window.closePartPricingMatrixModal = function() {
 window.saveComponentPartPricingFromModal = function() {
   const template = WIZARD_PRODUCT_TEMPLATES[wizardState.subtype];
   if (!template) return;
+
+  // Save metal prices per kg
+  if (!STATE.adminPricing) STATE.adminPricing = {};
+  STATE.adminPricing.metalPriceSteel = parseFloat(document.getElementById('metal-price-steel')?.value) || 0;
+  STATE.adminPricing.metalPriceHardox = parseFloat(document.getElementById('metal-price-hardox')?.value) || 0;
 
   const inputs = document.querySelectorAll('#part-pricing-modal-body .part-price-diff-input');
   inputs.forEach(input => {
@@ -1622,24 +1647,16 @@ function calculateWizardPricing() {
   
   wizardState.total = grandTotal;
 
-  // Render summary panel
+  // Update base price input value
+  const basePriceInput = document.getElementById('w-override-base-price');
+  if (basePriceInput && !basePriceInput.disabled) {
+    basePriceInput.value = basePrice;
+  }
+
+  // Render summary panel (dynamic parts only)
   const summarySheet = document.getElementById('w-live-summary-sheet');
   if (summarySheet) {
     summarySheet.innerHTML = `
-      <div class="preview-row" style="font-weight:700;align-items:center;">
-        <span>Base Model Market Price</span>
-        <div style="display:flex;align-items:center;gap:4px;">
-          <span>₹</span>
-          <input type="number" id="w-override-base-price" class="form-control form-control-sm" style="width:120px;text-align:right;font-weight:bold;padding:2px 6px;" value="${basePrice}" oninput="updateManualBasePrice(this.value)">
-        </div>
-      </div>
-      <div style="text-align:right;margin-top:6px;margin-bottom:12px;">
-        <button type="button" onclick="saveCurrentBasePriceAsDefault()" style="display:inline-flex;align-items:center;gap:6px;background:#10B981;color:#ffffff;border:none;padding:6px 12px;font-size:0.75rem;font-weight:700;border-radius:6px;cursor:pointer;box-shadow:0 2px 5px rgba(16,185,129,0.3);transition:all 0.2s ease;">
-          <svg style="width:14px;height:14px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"/></svg>
-          Save Base Price as Default
-        </button>
-      </div>
-      
       ${upgradesHtml ? `
         <div class="mb-xs mt-xs"><span style="font-size:0.7rem;color:var(--color-text-muted);text-transform:uppercase;">Technical Parameters Upgrades:</span></div>
         ${upgradesHtml}
