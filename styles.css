@@ -3228,6 +3228,45 @@ body.admin-logged-in .hero-section {
   letter-spacing: 0.3px;
 }
 
+/* Not Required toggle badge */
+.nr-badge {
+  display: inline-block;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 1px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  border: 1px solid var(--color-border);
+  color: var(--color-text-muted);
+  background: transparent;
+  transition: var(--transition-fast);
+  user-select: none;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.nr-badge:hover {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+.nr-badge.active {
+  background: #FEF2F2;
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+.spec-control-group .nr-badge.active + .form-control,
+.spec-control-group .nr-badge.active ~ .radio-group .radio-label {
+  opacity: 0.4;
+  pointer-events: none;
+}
+
+/* Section-level NR badge in header */
+.collapse-header .nr-badge {
+  font-size: 0.6rem;
+  padding: 2px 8px;
+}
+
 /* Autosave indicator */
 .autosave-indicator {
   font-size: 0.725rem;

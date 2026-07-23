@@ -34,6 +34,7 @@ let wizardState = {
   subtype: '',
   capacity: '',
   specs: {},
+  notRequired: {},
   customMods: [],
   status: 'Draft',
   total: 0
@@ -703,6 +704,7 @@ function loadDefaultSpecsForSubtype(subtypeKey) {
 
   // Initialize specs with defaults (built-in)
   wizardState.specs = {};
+  wizardState.notRequired = {};
   template.specs.forEach(spec => {
     wizardState.specs[spec.id] = spec.defaultValue;
   });
@@ -752,11 +754,13 @@ function renderConfiguratorFormInputs(template) {
     }
 
     container.innerHTML = secSpecs.map(spec => {
+      const isNr = !!wizardState.notRequired[spec.id];
+      const nrBadgeHtml = `<span class="nr-badge${isNr ? ' active' : ''}" id="nr-badge-${spec.id}" onclick="toggleFieldRequired('${spec.id}')">${isNr ? 'Not Required' : 'Required'}</span>`;
       let controlHtml = '';
 
       if (spec.type === 'dropdown') {
         controlHtml = `
-          <select id="w-spec-${spec.id}" class="form-control" onchange="updateSpecValueState('${spec.id}', this.value)">
+          <select id="w-spec-${spec.id}" class="form-control" onchange="updateSpecValueState('${spec.id}', this.value)" ${isNr ? 'disabled' : ''}>
             ${spec.options.map(opt => {
               const diff = getEffectiveSpecPriceDiff(spec, opt);
               return `<option value="${opt}" ${opt === spec.defaultValue ? 'selected' : ''}>
@@ -772,7 +776,7 @@ function renderConfiguratorFormInputs(template) {
               const diff = getEffectiveSpecPriceDiff(spec, opt);
               return `
                 <label class="radio-label">
-                  <input type="radio" name="w-spec-radio-${spec.id}" value="${opt}" ${opt === spec.defaultValue ? 'checked' : ''} onchange="updateSpecValueState('${spec.id}', this.value)">
+                  <input type="radio" name="w-spec-radio-${spec.id}" value="${opt}" ${opt === spec.defaultValue ? 'checked' : ''} onchange="updateSpecValueState('${spec.id}', this.value)" ${isNr ? 'disabled' : ''}>
                   ${opt} ${diff !== 0 ? `<span style="font-size:0.75rem;color:var(--color-text-muted);">(${diff > 0 ? '+' : ''}₹${diff.toLocaleString('en-IN')})</span>` : ''}
                 </label>
               `;
@@ -783,20 +787,20 @@ function renderConfiguratorFormInputs(template) {
         controlHtml = `
           <div class="checkbox-group">
             <label class="checkbox-label">
-              <input type="checkbox" id="w-spec-${spec.id}" ${spec.defaultValue === 'Yes' ? 'checked' : ''} onchange="updateSpecValueState('${spec.id}', this.checked ? 'Yes' : 'No')">
+              <input type="checkbox" id="w-spec-${spec.id}" ${spec.defaultValue === 'Yes' ? 'checked' : ''} onchange="updateSpecValueState('${spec.id}', this.checked ? 'Yes' : 'No')" ${isNr ? 'disabled' : ''}>
               Fitted in Standard Assembly
             </label>
           </div>
         `;
       } else if (spec.type === 'text') {
         controlHtml = `
-          <input type="text" id="w-spec-${spec.id}" class="form-control" value="${spec.defaultValue}" oninput="updateSpecValueState('${spec.id}', this.value)">
+          <input type="text" id="w-spec-${spec.id}" class="form-control" value="${spec.defaultValue}" oninput="updateSpecValueState('${spec.id}', this.value)" ${isNr ? 'disabled' : ''}>
         `;
       }
 
       return `
         <div class="spec-control-group">
-          <label style="font-size:0.775rem;font-weight:600;color:var(--color-text-dark);">${spec.name}</label>
+          <label style="font-size:0.775rem;font-weight:600;color:var(--color-text-dark);">${spec.name} ${nrBadgeHtml}</label>
           ${controlHtml}
         </div>
       `;
@@ -853,12 +857,14 @@ function renderCustomItemSpecControls() {
 
     const fieldsHtml = section.fields.map(field => {
       const selectedVal = wizardState.specs[field.id] || field.defaultValue || '';
+      const isNr = !!wizardState.notRequired[field.id];
+      const nrBadgeHtml = `<span class="nr-badge${isNr ? ' active' : ''}" id="nr-badge-${field.id}" onclick="toggleFieldRequired('${field.id}')">${isNr ? 'Not Required' : 'Required'}</span>`;
       let controlHtml = '';
 
       if (field.type === 'dropdown') {
         const opts = field.options && field.options.length > 0 ? field.options : [selectedVal || 'N/A'];
         controlHtml = `
-          <select id="w-spec-${field.id}" class="form-control" onchange="updateSpecValueState('${field.id}', this.value)">
+          <select id="w-spec-${field.id}" class="form-control" onchange="updateSpecValueState('${field.id}', this.value)" ${isNr ? 'disabled' : ''}>
             ${opts.map(opt => {
               const diff = (field.priceDiffs && field.priceDiffs[opt] !== undefined) ? field.priceDiffs[opt] : 0;
               return `<option value="${opt}" ${opt === selectedVal ? 'selected' : ''}>
@@ -875,7 +881,7 @@ function renderCustomItemSpecControls() {
               const diff = (field.priceDiffs && field.priceDiffs[opt] !== undefined) ? field.priceDiffs[opt] : 0;
               return `
                 <label class="radio-label">
-                  <input type="radio" name="w-spec-radio-${field.id}" value="${opt}" ${opt === selectedVal ? 'checked' : ''} onchange="updateSpecValueState('${field.id}', this.value)">
+                  <input type="radio" name="w-spec-radio-${field.id}" value="${opt}" ${opt === selectedVal ? 'checked' : ''} onchange="updateSpecValueState('${field.id}', this.value)" ${isNr ? 'disabled' : ''}>
                   ${opt} ${diff !== 0 ? `<span style="font-size:0.75rem;color:var(--color-text-muted);">(${diff > 0 ? '+' : ''}₹${diff.toLocaleString('en-IN')})</span>` : ''}
                 </label>
               `;
@@ -884,12 +890,12 @@ function renderCustomItemSpecControls() {
         `;
       } else if (field.type === 'number') {
         controlHtml = `
-          <input type="number" id="w-spec-${field.id}" class="form-control" value="${selectedVal}" oninput="updateSpecValueState('${field.id}', this.value)">
+          <input type="number" id="w-spec-${field.id}" class="form-control" value="${selectedVal}" oninput="updateSpecValueState('${field.id}', this.value)" ${isNr ? 'disabled' : ''}>
         `;
       } else {
         // text type (default)
         controlHtml = `
-          <input type="text" id="w-spec-${field.id}" class="form-control" value="${selectedVal}" oninput="updateSpecValueState('${field.id}', this.value)">
+          <input type="text" id="w-spec-${field.id}" class="form-control" value="${selectedVal}" oninput="updateSpecValueState('${field.id}', this.value)" ${isNr ? 'disabled' : ''}>
         `;
       }
 
@@ -898,6 +904,7 @@ function renderCustomItemSpecControls() {
           <label style="font-size:0.775rem;font-weight:600;color:var(--color-text-dark);">
             ${field.name}
             <span class="aci-section-tag" style="margin-left:6px;">${field.type}</span>
+            ${nrBadgeHtml}
           </label>
           ${controlHtml}
         </div>
@@ -910,7 +917,10 @@ function renderCustomItemSpecControls() {
       <div class="collapsible-section" id="${secId}" style="margin-top:16px;">
         <div class="collapse-header" onclick="toggleCollapseSection('${secId}')">
           <span>${section.name} <span class="aci-section-tag">Custom</span></span>
-          <svg class="collapse-header-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="nr-badge" id="nr-badge-sec-${section.id}" onclick="event.stopPropagation();toggleSectionRequired('${secId}')">Section Required</span>
+            <svg class="collapse-header-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+          </div>
         </div>
         <div class="collapse-content">
           <div class="spec-grid-control">
@@ -934,6 +944,115 @@ window.updateSpecValueState = function(specId, val) {
   calculateWizardPricing();
   simulateDraftAutoSave();
 };
+
+window.toggleFieldRequired = function(specId) {
+  const wasNotRequired = wizardState.notRequired[specId];
+  if (wasNotRequired) {
+    delete wizardState.notRequired[specId];
+  } else {
+    wizardState.notRequired[specId] = true;
+  }
+  const badge = document.getElementById(`nr-badge-${specId}`);
+  const control = document.getElementById(`w-spec-${specId}`);
+  if (badge) {
+    badge.classList.toggle('active');
+    badge.textContent = badge.classList.contains('active') ? 'Not Required' : 'Required';
+  }
+  if (control) {
+    control.disabled = badge.classList.contains('active');
+  }
+  // For radio groups, disable all inputs
+  const radios = document.querySelectorAll(`input[name="w-spec-radio-${specId}"]`);
+  radios.forEach(r => r.disabled = badge.classList.contains('active'));
+  updateSectionNrBadgeFromFields(specId);
+  calculateWizardPricing();
+  simulateDraftAutoSave();
+};
+
+window.toggleSectionRequired = function(sectionId) {
+  const template = WIZARD_PRODUCT_TEMPLATES[wizardState.subtype];
+  if (!template) return;
+  const secName = sectionId.replace('spec-sec-', '');
+  const secSpecs = template.specs.filter(s => s.section === secName);
+  if (secSpecs.length === 0) return;
+
+  // Determine if all are already not required
+  const allNr = secSpecs.every(s => wizardState.notRequired[s.id]);
+  const newState = !allNr;
+
+  secSpecs.forEach(spec => {
+    if (newState) {
+      wizardState.notRequired[spec.id] = true;
+    } else {
+      delete wizardState.notRequired[spec.id];
+    }
+    const badge = document.getElementById(`nr-badge-${spec.id}`);
+    const control = document.getElementById(`w-spec-${spec.id}`);
+    if (badge) {
+      badge.classList.toggle('active', newState);
+      badge.textContent = newState ? 'Not Required' : 'Required';
+    }
+    if (control) {
+      control.disabled = newState;
+    }
+    const radios = document.querySelectorAll(`input[name="w-spec-radio-${spec.id}"]`);
+    radios.forEach(r => r.disabled = newState);
+  });
+
+  // Update the section-level NR badge
+  const secBadge = document.getElementById(`nr-badge-sec-${secName}`);
+  if (secBadge) {
+    secBadge.classList.toggle('active', newState);
+    secBadge.textContent = newState ? 'Section Not Required' : 'Section Required';
+  }
+
+  // Also toggle custom fields in this section if it's a custom section
+  const isCustom = sectionId.startsWith('spec-sec-custom-');
+  if (isCustom) {
+    const customSections = getCustomItemSpecs();
+    const section = customSections.find(s => `spec-sec-custom-${s.id}` === sectionId);
+    if (section) {
+      section.fields.forEach(field => {
+        if (newState) {
+          wizardState.notRequired[field.id] = true;
+        } else {
+          delete wizardState.notRequired[field.id];
+        }
+        const badge = document.getElementById(`nr-badge-${field.id}`);
+        const control = document.getElementById(`w-spec-${field.id}`);
+        if (badge) {
+          badge.classList.toggle('active', newState);
+          badge.textContent = newState ? 'Not Required' : 'Required';
+        }
+        if (control) {
+          control.disabled = newState;
+        }
+        const radios = document.querySelectorAll(`input[name="w-spec-radio-${field.id}"]`);
+        radios.forEach(r => r.disabled = newState);
+      });
+    }
+  }
+
+  calculateWizardPricing();
+  simulateDraftAutoSave();
+};
+
+function updateSectionNrBadgeFromFields(specId) {
+  const template = WIZARD_PRODUCT_TEMPLATES[wizardState.subtype];
+  if (!template) return;
+  const spec = template.specs.find(s => s.id === specId);
+  if (!spec) return;
+  const secName = spec.section;
+  const secSpecs = template.specs.filter(s => s.section === secName);
+  if (secSpecs.length === 0) return;
+  const allNr = secSpecs.every(s => wizardState.notRequired[s.id]);
+  const anyNr = secSpecs.some(s => wizardState.notRequired[s.id]);
+  const secBadge = document.getElementById(`nr-badge-sec-${secName}`);
+  if (secBadge) {
+    secBadge.classList.toggle('active', allNr);
+    secBadge.textContent = allNr ? 'Section Not Required' : (anyNr ? 'Mixed' : 'Section Required');
+  }
+}
 
 // Custom Mods row builders
 window.addWizardCustomModRow = function() {
@@ -1580,6 +1699,7 @@ function calculateWizardPricing() {
 
   // Calculate Spec Upgrades (built-in)
   template.specs.forEach(spec => {
+    if (wizardState.notRequired[spec.id]) return;
     const selectedVal = wizardState.specs[spec.id];
     if (selectedVal) {
       let diff = getEffectiveSpecPriceDiff(spec, selectedVal);
@@ -1600,6 +1720,7 @@ function calculateWizardPricing() {
   const customSections = getCustomItemSpecs();
   customSections.forEach(section => {
     section.fields.forEach(field => {
+      if (wizardState.notRequired[field.id]) return;
       const selectedVal = wizardState.specs[field.id];
       if (selectedVal && field.priceDiffs && field.priceDiffs[selectedVal] !== undefined) {
         const diff = field.priceDiffs[selectedVal];
@@ -1732,6 +1853,7 @@ function generateQuotationFinalReview() {
 
   // Populate spec list elements dynamically (built-in specs)
   Object.keys(wizardState.specs).forEach(key => {
+    if (wizardState.notRequired[key]) return;
     const specInfo = template.specs.find(s => s.id === key);
     if (specInfo) {
       specsListHtml += `
@@ -1747,6 +1869,7 @@ function generateQuotationFinalReview() {
   const customSections = getCustomItemSpecs();
   customSections.forEach(section => {
     section.fields.forEach(field => {
+      if (wizardState.notRequired[field.id]) return;
       const val = wizardState.specs[field.id];
       if (val) {
         specsListHtml += `
@@ -1870,6 +1993,7 @@ window.convertWizardToWorkOrder = function() {
   // Compile spec dump details so production team never re-enters data
   const specDetails = [];
   Object.keys(wizardState.specs).forEach(key => {
+    if (wizardState.notRequired[key]) return;
     const specInfo = template.specs.find(s => s.id === key);
     if (specInfo) {
       specDetails.push(`${specInfo.name}: ${wizardState.specs[key]}`);
@@ -1880,6 +2004,7 @@ window.convertWizardToWorkOrder = function() {
   const customSections = getCustomItemSpecs();
   customSections.forEach(section => {
     section.fields.forEach(field => {
+      if (wizardState.notRequired[field.id]) return;
       const val = wizardState.specs[field.id];
       if (val) {
         specDetails.push(`[${section.name}] ${field.name}: ${val}`);
