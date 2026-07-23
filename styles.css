@@ -2018,23 +2018,37 @@ textarea.form-control {
 
 /* Production Board Layout (Kanban Grid) */
 .board-container {
-  display: flex;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 20px;
-  overflow-x: auto;
   padding-bottom: 20px;
-  height: calc(100vh - 220px);
-  min-height: 500px;
-  align-items: flex-start;
+  overflow-x: hidden;
+}
+
+@media (max-width: 1280px) {
+  .board-container {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 992px) {
+  .board-container {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .board-container {
+    grid-template-columns: 1fr;
+  }
 }
 
 .board-col {
-  width: 280px;
-  flex-shrink: 0;
+  width: 100%;
   background-color: var(--color-bg-white);
   border: 1.5px solid var(--color-border);
   display: flex;
   flex-direction: column;
-  max-height: 100%;
 }
 
 .board-col-header {
@@ -2064,7 +2078,6 @@ textarea.form-control {
 
 .board-col-cards {
   padding: 16px;
-  overflow-y: auto;
   display: flex;
   flex-direction: column;
   gap: 12px;
