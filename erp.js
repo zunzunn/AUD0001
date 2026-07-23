@@ -922,7 +922,7 @@ function generateQuotationFinalReview() {
   document.getElementById('w-pdf-words-val').innerText = priceToIndianWords(grandTotal);
 
   // Specifications
-  const specsTable = document.getElementById('w-pdf-specs-list-table');
+  const specsContainer = document.getElementById('w-pdf-specs-list-container');
   let specsListHtml = '';
   let count = 1;
 
@@ -936,32 +936,34 @@ function generateQuotationFinalReview() {
     const specInfo = template.specs.find(s => s.id === key);
     if (specInfo) {
       specsListHtml += `
-        <tr>
-          <td>${count++}.</td>
-          <td>${specInfo.name}: <strong>${wizardState.specs[key]}</strong></td>
-        </tr>
+        <div class="pdf-specs-item">
+          <span style="font-weight:bold; min-width: 26px;">${count++}.</span>
+          <span>${specInfo.name} = ${wizardState.specs[key]}</span>
+        </div>
       `;
     }
   });
 
   // Add dimensions to specs checklist
   specsListHtml += `
-    <tr><td>${count++}.</td><td>Overall Length Dimension: <strong>${lenVal}</strong></td></tr>
-    <tr><td>${count++}.</td><td>Side Gate Height Dimension: <strong>${heightVal}</strong></td></tr>
-    <tr><td>${count++}.</td><td>Overall Frame Width Dimension: <strong>${widthVal}</strong></td></tr>
+    <div class="pdf-specs-item"><span style="font-weight:bold; min-width: 26px;">${count++}.</span><span>Overall Length Dimension = ${lenVal}</span></div>
+    <div class="pdf-specs-item"><span style="font-weight:bold; min-width: 26px;">${count++}.</span><span>Side Gate Height Dimension = ${heightVal}</span></div>
+    <div class="pdf-specs-item"><span style="font-weight:bold; min-width: 26px;">${count++}.</span><span>Overall Frame Width Dimension = ${widthVal}</span></div>
   `;
 
   // Attach Custom accessories if added
   wizardState.customMods.forEach(mod => {
     specsListHtml += `
-      <tr>
-        <td>${count++}.</td>
-        <td>Fitted Accessory: <strong>${mod.name} (Qty: ${mod.qty})</strong></td>
-      </tr>
+      <div class="pdf-specs-item">
+        <span style="font-weight:bold; min-width: 26px;">${count++}.</span>
+        <span>Fitted Accessory = ${mod.name} (Qty: ${mod.qty})</span>
+      </div>
     `;
   });
 
-  specsTable.innerHTML = specsListHtml;
+  if (specsContainer) {
+    specsContainer.innerHTML = specsListHtml;
+  }
 
   // Toggle Work Order conversion block
   updateQuotationStatusState();
@@ -1599,32 +1601,33 @@ window.openPdfPreview = function(quoteId) {
   document.getElementById('pdf-grand-total-val').innerText = formatPdfPrice(grandTotalVal);
 
   document.getElementById('pdf-words-val').innerText = priceToIndianWords(grandTotalVal);
-
-  // Specs lists formatting
-  const specsTable = document.getElementById('pdf-specs-list-table');
+  
+  const specsContainer = document.getElementById('pdf-specs-list-container');
   let specsHtml = '';
   let count = 1;
 
   Object.keys(quote.specs).forEach(key => {
     specsHtml += `
-      <tr>
-        <td>${count++}.</td>
-        <td>${key.toUpperCase()}: <strong>${quote.specs[key]}</strong></td>
-      </tr>
+      <div class="pdf-specs-item">
+        <span style="font-weight:bold; min-width: 26px;">${count++}.</span>
+        <span>${key.toUpperCase()} = ${quote.specs[key]}</span>
+      </div>
     `;
   });
 
   if (quote.customItems && quote.customItems.length > 0) {
     quote.customItems.forEach(item => {
       specsHtml += `
-        <tr>
-          <td>${count++}.</td>
-          <td>Accessory: <strong>${item.name} (Qty: ${item.qty})</strong></td>
-        </tr>
+        <div class="pdf-specs-item">
+          <span style="font-weight:bold; min-width: 26px;">${count++}.</span>
+          <span>Accessory = ${item.name} (Qty: ${item.qty})</span>
+        </div>
       `;
     });
   }
 
-  specsTable.innerHTML = specsHtml;
+  if (specsContainer) {
+    specsContainer.innerHTML = specsHtml;
+  }
   document.getElementById('pdf-preview-modal').classList.add('active');
 };
