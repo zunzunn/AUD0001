@@ -3091,6 +3091,143 @@ body.admin-logged-in .hero-section {
   padding-top: 24px;
 }
 
+/* Custom Item Section Management */
+.custom-section-card {
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  transition: var(--transition-fast);
+}
+.custom-section-card:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+.custom-section-card-info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.custom-section-card-name {
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: var(--color-text-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.custom-section-card-count {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+.custom-section-card-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.custom-section-card-actions button {
+  background: none;
+  border: 1px solid var(--color-border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  transition: var(--transition-fast);
+  color: var(--color-text-muted);
+}
+.custom-section-card-actions .btn-edit-section:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+}
+.custom-section-card-actions .btn-delete-section:hover {
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+  background: #FEF2F2;
+}
+
+/* Add Item Modal Field Rows */
+.aci-field-row {
+  background: #F8FAFC;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  position: relative;
+}
+.aci-field-row-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+.aci-field-row-header span {
+  font-weight: 700;
+  font-size: 0.8rem;
+  color: #475569;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.aci-field-row-header button {
+  background: none;
+  border: none;
+  color: var(--color-danger);
+  cursor: pointer;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+.aci-field-row-header button:hover {
+  background: #FEF2F2;
+}
+.aci-field-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+.aci-field-grid .form-group {
+  margin-bottom: 0;
+}
+.aci-field-grid label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #64748B;
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+.aci-field-grid .form-control {
+  padding: 8px 10px;
+  font-size: 0.8rem;
+  color: var(--color-text-dark);
+}
+.aci-field-grid textarea.form-control {
+  min-height: 60px;
+  resize: vertical;
+}
+.aci-field-grid select.form-control {
+  padding: 8px 10px;
+  font-size: 0.8rem;
+  color: var(--color-text-dark);
+}
+.aci-section-tag {
+  display: inline-block;
+  background: var(--color-primary-light);
+  color: var(--color-primary-dark);
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
 /* Autosave indicator */
 .autosave-indicator {
   font-size: 0.725rem;

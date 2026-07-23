@@ -203,6 +203,7 @@ function loadState() {
     try {
       STATE = JSON.parse(saved);
       syncStateCalculations();
+      if (!STATE.customItemDefinitions) STATE.customItemDefinitions = [];
       return;
     } catch(e) {
       console.error("State loading error, resetting to defaults", e);
@@ -553,6 +554,16 @@ window.jumpToWizardStep = function(stepNum) {
 
   wizardState.currentStep = stepNum;
 
+  // Render custom section controls and list when entering configurator
+  if (stepNum === 4) {
+    renderCustomSectionsList();
+    // Ensure custom item controls are rendered in the configurator
+    const template = WIZARD_PRODUCT_TEMPLATES[wizardState.subtype];
+    if (template) {
+      renderCustomItemSpecControls();
+    }
+  }
+
   // Compile final sheet if step 5
   if (stepNum === 5) {
     generateQuotationFinalReview();
@@ -690,14 +701,25 @@ function loadDefaultSpecsForSubtype(subtypeKey) {
   const template = WIZARD_PRODUCT_TEMPLATES[subtypeKey];
   if (!template) return;
 
-  // Initialize specs with defaults
+  // Initialize specs with defaults (built-in)
   wizardState.specs = {};
   template.specs.forEach(spec => {
     wizardState.specs[spec.id] = spec.defaultValue;
   });
 
+  // Initialize custom item specs with defaults
+  const customSections = getCustomItemSpecs();
+  customSections.forEach(section => {
+    section.fields.forEach(field => {
+      if (field.defaultValue) {
+        wizardState.specs[field.id] = field.defaultValue;
+      }
+    });
+  });
+
   // Inject Form Controls into sections
   renderConfiguratorFormInputs(template);
+  renderCustomSectionsList();
   calculateWizardPricing();
 }
 
@@ -799,6 +821,105 @@ function renderConfiguratorFormInputs(template) {
       </div>
     `;
   }
+
+  // Render Custom Item Sections
+  renderCustomItemSpecControls();
+}
+
+function renderCustomItemSpecControls() {
+  const customSections = getCustomItemSpecs();
+
+  // Ensure a container for custom sections exists
+  let customContainer = document.getElementById('specs-custom-controls-inject');
+  if (!customContainer) {
+    // Create a container right after the dimensions section
+    const dimsSec = document.getElementById('spec-sec-dimensions');
+    if (dimsSec) {
+      const containerDiv = document.createElement('div');
+      containerDiv.id = 'specs-custom-controls-inject';
+      dimsSec.parentNode.insertBefore(containerDiv, dimsSec.nextSibling);
+    }
+    customContainer = document.getElementById('specs-custom-controls-inject');
+  }
+  if (!customContainer) return;
+
+  if (!customSections || customSections.length === 0) {
+    customContainer.innerHTML = '';
+    return;
+  }
+
+  customContainer.innerHTML = customSections.map((section, secIdx) => {
+    const secId = `spec-sec-custom-${section.id}`;
+
+    const fieldsHtml = section.fields.map(field => {
+      const selectedVal = wizardState.specs[field.id] || field.defaultValue || '';
+      let controlHtml = '';
+
+      if (field.type === 'dropdown') {
+        const opts = field.options && field.options.length > 0 ? field.options : [selectedVal || 'N/A'];
+        controlHtml = `
+          <select id="w-spec-${field.id}" class="form-control" onchange="updateSpecValueState('${field.id}', this.value)">
+            ${opts.map(opt => {
+              const diff = (field.priceDiffs && field.priceDiffs[opt] !== undefined) ? field.priceDiffs[opt] : 0;
+              return `<option value="${opt}" ${opt === selectedVal ? 'selected' : ''}>
+                ${opt} ${diff !== 0 ? `(${diff > 0 ? '+' : ''}₹${diff.toLocaleString('en-IN')})` : ''}
+              </option>`;
+            }).join('')}
+          </select>
+        `;
+      } else if (field.type === 'radio') {
+        const opts = field.options && field.options.length > 0 ? field.options : [selectedVal || 'N/A'];
+        controlHtml = `
+          <div class="radio-group">
+            ${opts.map((opt, i) => {
+              const diff = (field.priceDiffs && field.priceDiffs[opt] !== undefined) ? field.priceDiffs[opt] : 0;
+              return `
+                <label class="radio-label">
+                  <input type="radio" name="w-spec-radio-${field.id}" value="${opt}" ${opt === selectedVal ? 'checked' : ''} onchange="updateSpecValueState('${field.id}', this.value)">
+                  ${opt} ${diff !== 0 ? `<span style="font-size:0.75rem;color:var(--color-text-muted);">(${diff > 0 ? '+' : ''}₹${diff.toLocaleString('en-IN')})</span>` : ''}
+                </label>
+              `;
+            }).join('')}
+          </div>
+        `;
+      } else if (field.type === 'number') {
+        controlHtml = `
+          <input type="number" id="w-spec-${field.id}" class="form-control" value="${selectedVal}" oninput="updateSpecValueState('${field.id}', this.value)">
+        `;
+      } else {
+        // text type (default)
+        controlHtml = `
+          <input type="text" id="w-spec-${field.id}" class="form-control" value="${selectedVal}" oninput="updateSpecValueState('${field.id}', this.value)">
+        `;
+      }
+
+      return `
+        <div class="spec-control-group">
+          <label style="font-size:0.775rem;font-weight:600;color:var(--color-text-dark);">
+            ${field.name}
+            <span class="aci-section-tag" style="margin-left:6px;">${field.type}</span>
+          </label>
+          ${controlHtml}
+        </div>
+      `;
+    }).join('');
+
+    if (!fieldsHtml) return '';
+
+    return `
+      <div class="collapsible-section" id="${secId}" style="margin-top:16px;">
+        <div class="collapse-header" onclick="toggleCollapseSection('${secId}')">
+          <span>${section.name} <span class="aci-section-tag">Custom</span></span>
+          <svg class="collapse-header-chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="collapse-content">
+          <div class="spec-grid-control">
+            ${fieldsHtml}
+          </div>
+        </div>
+      </div>
+    `;
+  }).filter(Boolean).join('');
 }
 
 window.toggleCollapseSection = function(secId) {
@@ -857,6 +978,425 @@ window.removeWizardCustomModRow = function(id) {
     simulateDraftAutoSave();
   }
 };
+
+// -------------------------------------------------------
+// CUSTOM ITEM SECTION MANAGEMENT (Add Item Feature)
+// -------------------------------------------------------
+
+// Ensure customItemDefinitions exists
+function ensureCustomItemDefinitions() {
+  if (!STATE.customItemDefinitions) STATE.customItemDefinitions = [];
+}
+
+window.openAddCustomItemSectionModal = function() {
+  loadState();
+  ensureCustomItemDefinitions();
+  document.getElementById('aci-section-name').value = '';
+  const container = document.getElementById('aci-fields-container');
+  container.innerHTML = '';
+  document.getElementById('aci-no-fields-msg').style.display = 'block';
+  document.getElementById('add-custom-item-modal').classList.add('active');
+};
+
+window.closeAddCustomItemSectionModal = function() {
+  document.getElementById('add-custom-item-modal').classList.remove('active');
+};
+
+window.addFieldRowToModal = function() {
+  const container = document.getElementById('aci-fields-container');
+  document.getElementById('aci-no-fields-msg').style.display = 'none';
+  const idx = container.children.length;
+  const rowId = `aci-field-${Date.now()}`;
+  const html = `
+    <div class="aci-field-row" id="${rowId}">
+      <div class="aci-field-row-header">
+        <span>Field #${idx + 1}</span>
+        <button type="button" onclick="removeFieldRowFromModal(this)" style="display:inline-flex;align-items:center;gap:4px;">
+          <svg style="width:12px;height:12px;" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Remove
+        </button>
+      </div>
+      <div class="aci-field-grid">
+        <div class="form-group">
+          <label>Field Name</label>
+          <input type="text" class="form-control aci-field-name" placeholder="e.g. Battery Type, Voltage">
+        </div>
+        <div class="form-group">
+          <label>Field Type</label>
+          <select class="form-control aci-field-type" onchange="toggleFieldOptionsInput(this)">
+            <option value="dropdown">Dropdown (Select)</option>
+            <option value="radio">Radio (Selectable)</option>
+            <option value="text">Text Input</option>
+            <option value="number">Number Input</option>
+          </select>
+        </div>
+        <div class="form-group aci-options-group" style="grid-column: span 2;">
+          <label>Options (one per line, for dropdown/radio only)</label>
+          <textarea class="form-control aci-field-options" placeholder="Option 1&#10;Option 2&#10;Option 3" rows="3"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Default Value</label>
+          <input type="text" class="form-control aci-field-default" placeholder="e.g. Standard">
+        </div>
+        <div class="form-group">
+          <label>Price Differentials (format: Option: price, one per line)</label>
+          <textarea class="form-control aci-field-prices" placeholder="Option 1: 0&#10;Option 2: 5000&#10;Option 3: 10000" rows="3"></textarea>
+        </div>
+      </div>
+    </div>
+  `;
+  container.insertAdjacentHTML('beforeend', html);
+};
+
+window.removeFieldRowFromModal = function(btn) {
+  const row = btn.closest('.aci-field-row');
+  if (row) {
+    row.remove();
+    const container = document.getElementById('aci-fields-container');
+    if (container.children.length === 0) {
+      document.getElementById('aci-no-fields-msg').style.display = 'block';
+    }
+  }
+};
+
+window.toggleFieldOptionsInput = function(select) {
+  const row = select.closest('.aci-field-row');
+  const optsGroup = row.querySelector('.aci-options-group');
+  const priceGroup = row.querySelector('.aci-field-grid .form-group:last-child');
+  if (select.value === 'text' || select.value === 'number') {
+    optsGroup.style.display = 'none';
+  } else {
+    optsGroup.style.display = 'block';
+  }
+};
+
+// Parse price differentials textarea into object
+function parsePriceDiffs(text) {
+  const diffs = {};
+  text.split('\n').forEach(line => {
+    const parts = line.split(':');
+    if (parts.length >= 2) {
+      const opt = parts[0].trim();
+      const price = parseFloat(parts[1].trim());
+      if (opt && !isNaN(price)) {
+        diffs[opt] = price;
+      }
+    }
+  });
+  return diffs;
+}
+
+window.saveCustomItemSection = function() {
+  const sectionName = document.getElementById('aci-section-name').value.trim();
+  if (!sectionName) {
+    alert('Please enter a section name.');
+    return;
+  }
+
+  const fieldRows = document.querySelectorAll('#aci-fields-container .aci-field-row');
+  if (fieldRows.length === 0) {
+    alert('Please add at least one field.');
+    return;
+  }
+
+  loadState();
+  ensureCustomItemDefinitions();
+
+  const section = {
+    id: `custom-${Date.now()}`,
+    name: sectionName,
+    fields: []
+  };
+
+  fieldRows.forEach((row, idx) => {
+    const name = row.querySelector('.aci-field-name').value.trim();
+    if (!name) return;
+
+    const type = row.querySelector('.aci-field-type').value;
+    const defaultVal = row.querySelector('.aci-field-default').value.trim();
+    let options = [];
+    const optsText = row.querySelector('.aci-field-options') ? row.querySelector('.aci-field-options').value.trim() : '';
+    if (optsText && (type === 'dropdown' || type === 'radio')) {
+      options = optsText.split('\n').map(o => o.trim()).filter(o => o);
+    }
+
+    const priceDiffsText = row.querySelector('.aci-field-prices') ? row.querySelector('.aci-field-prices').value.trim() : '';
+    const priceDiffs = parsePriceDiffs(priceDiffsText);
+
+    section.fields.push({
+      id: `cf_${section.id}_${idx}`,
+      name,
+      type,
+      options: options.length > 0 ? options : [],
+      defaultValue: defaultVal,
+      priceDiffs: Object.keys(priceDiffs).length > 0 ? priceDiffs : undefined
+    });
+  });
+
+  if (section.fields.length === 0) {
+    alert('Please fill in at least one valid field.');
+    return;
+  }
+
+  STATE.customItemDefinitions.push(section);
+  saveState();
+  closeAddCustomItemSectionModal();
+  renderCustomSectionsList();
+  renderConfiguratorFormInputs(WIZARD_PRODUCT_TEMPLATES[wizardState.subtype]);
+  calculateWizardPricing();
+  logSystemActivity(`Added custom spec section: "${sectionName}" with ${section.fields.length} field(s).`);
+  alert(`Custom section "${sectionName}" saved successfully!`);
+};
+
+window.deleteCustomItemSection = function(id) {
+  if (!confirm('Delete this custom spec section? This cannot be undone.')) return;
+  loadState();
+  ensureCustomItemDefinitions();
+  const idx = STATE.customItemDefinitions.findIndex(s => s.id === id);
+  if (idx !== -1) {
+    const section = STATE.customItemDefinitions[idx];
+    const name = section.name;
+    // Clean up wizardState specs for deleted section's fields
+    section.fields.forEach(field => {
+      delete wizardState.specs[field.id];
+    });
+    STATE.customItemDefinitions.splice(idx, 1);
+    saveState();
+    renderCustomSectionsList();
+    renderConfiguratorFormInputs(WIZARD_PRODUCT_TEMPLATES[wizardState.subtype]);
+    calculateWizardPricing();
+    logSystemActivity(`Deleted custom spec section: "${name}".`);
+  }
+};
+
+function renderCustomSectionsList() {
+  const container = document.getElementById('w-custom-items-sections-list');
+  if (!container) return;
+  loadState();
+  ensureCustomItemDefinitions();
+
+  if (STATE.customItemDefinitions.length === 0) {
+    container.innerHTML = '<p class="section-hint">No custom sections defined. Click "Add Custom Spec Section" to create one.</p>';
+    return;
+  }
+
+  container.innerHTML = STATE.customItemDefinitions.map(section => `
+    <div class="custom-section-card">
+      <div class="custom-section-card-info">
+        <span class="custom-section-card-name">${section.name}</span>
+        <span class="custom-section-card-count">${section.fields.length} field(s) · ${section.fields.map(f => f.name).join(', ')}</span>
+      </div>
+      <div class="custom-section-card-actions">
+        <button type="button" class="btn-edit-section" onclick="openEditCustomItemSectionModal('${section.id}')" title="Edit section">
+          <svg style="width:14px;height:14px;" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+          Edit
+        </button>
+        <button type="button" class="btn-delete-section" onclick="deleteCustomItemSection('${section.id}')" title="Delete section">
+          <svg style="width:14px;height:14px;" viewBox="0 0 24 24"><polyline points="3 6 5 6 21 6"/><path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2"/></svg>
+          Delete
+        </button>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ------------------------------------------
+// EDIT CUSTOM ITEM SECTION
+// ------------------------------------------
+let _editSectionId = null;
+
+window.openEditCustomItemSectionModal = function(id) {
+  loadState();
+  ensureCustomItemDefinitions();
+  const section = STATE.customItemDefinitions.find(s => s.id === id);
+  if (!section) { alert('Section not found.'); return; }
+
+  _editSectionId = id;
+  const container = document.getElementById('edit-custom-item-modal-body');
+
+  let fieldsHtml = section.fields.map((field, idx) => {
+    const optionsVal = (field.options && field.options.length > 0) ? field.options.join('\n') : '';
+    const pricesVal = field.priceDiffs ? Object.entries(field.priceDiffs).map(([k, v]) => `${k}: ${v}`).join('\n') : '';
+
+    return `
+      <div class="aci-field-row" data-field-idx="${idx}">
+        <div class="aci-field-row-header">
+          <span>Field #${idx + 1}</span>
+          <button type="button" onclick="removeEditFieldRow(this)" style="display:inline-flex;align-items:center;gap:4px;background:none;border:none;color:var(--color-danger);cursor:pointer;font-size:0.75rem;font-weight:600;padding:4px 8px;border-radius:4px;">
+            <svg style="width:12px;height:12px;" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            Remove
+          </button>
+        </div>
+        <div class="aci-field-grid">
+          <div class="form-group">
+            <label>Field Name</label>
+            <input type="text" class="form-control edit-field-name" value="${field.name}">
+          </div>
+          <div class="form-group">
+            <label>Field Type</label>
+            <select class="form-control edit-field-type" onchange="toggleEditFieldOptions(this)">
+              <option value="dropdown" ${field.type === 'dropdown' ? 'selected' : ''}>Dropdown (Select)</option>
+              <option value="radio" ${field.type === 'radio' ? 'selected' : ''}>Radio (Selectable)</option>
+              <option value="text" ${field.type === 'text' ? 'selected' : ''}>Text Input</option>
+              <option value="number" ${field.type === 'number' ? 'selected' : ''}>Number Input</option>
+            </select>
+          </div>
+          <div class="form-group edit-options-group" style="grid-column: span 2; ${field.type === 'text' || field.type === 'number' ? 'display:none;' : ''}">
+            <label>Options (one per line, for dropdown/radio only)</label>
+            <textarea class="form-control edit-field-options" rows="3">${optionsVal}</textarea>
+          </div>
+          <div class="form-group">
+            <label>Default Value</label>
+            <input type="text" class="form-control edit-field-default" value="${field.defaultValue || ''}">
+          </div>
+          <div class="form-group">
+            <label>Price Differentials (format: Option: price)</label>
+            <textarea class="form-control edit-field-prices" rows="3">${pricesVal}</textarea>
+          </div>
+        </div>
+      </div>
+    `;
+  }).join('');
+
+  container.innerHTML = `
+    <div style="margin-bottom:20px;">
+      <label style="font-weight:700; font-size:0.85rem; display:block; margin-bottom:6px;">Section Name</label>
+      <input type="text" id="edit-section-name" class="form-control" value="${section.name}" style="font-weight:600;">
+    </div>
+    <div style="margin-bottom:16px; display:flex; align-items:center; justify-content:space-between;">
+      <label style="font-weight:700; font-size:0.85rem;">Fields / Specs</label>
+      <button type="button" class="btn btn-outline btn-xs" onclick="addEditFieldRow()" style="display:inline-flex;align-items:center;gap:4px;">
+        <svg style="width:12px;height:12px;" viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Field
+      </button>
+    </div>
+    <div id="edit-fields-container">
+      ${fieldsHtml || '<p style="padding:20px; text-align:center; color:#64748B; font-size:0.85rem;">No fields.</p>'}
+    </div>
+  `;
+
+  document.getElementById('edit-custom-item-modal').classList.add('active');
+};
+
+window.closeEditCustomItemSectionModal = function() {
+  document.getElementById('edit-custom-item-modal').classList.remove('active');
+  _editSectionId = null;
+};
+
+window.removeEditFieldRow = function(btn) {
+  const row = btn.closest('.aci-field-row');
+  if (row) row.remove();
+};
+
+window.addEditFieldRow = function() {
+  const container = document.getElementById('edit-fields-container');
+  const idx = container.querySelectorAll('.aci-field-row').length;
+  const html = `
+    <div class="aci-field-row">
+      <div class="aci-field-row-header">
+        <span>Field #${idx + 1}</span>
+        <button type="button" onclick="removeEditFieldRow(this)" style="display:inline-flex;align-items:center;gap:4px;background:none;border:none;color:var(--color-danger);cursor:pointer;font-size:0.75rem;font-weight:600;padding:4px 8px;border-radius:4px;">
+          <svg style="width:12px;height:12px;" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          Remove
+        </button>
+      </div>
+      <div class="aci-field-grid">
+        <div class="form-group">
+          <label>Field Name</label>
+          <input type="text" class="form-control edit-field-name" placeholder="e.g. Battery Type">
+        </div>
+        <div class="form-group">
+          <label>Field Type</label>
+          <select class="form-control edit-field-type" onchange="toggleEditFieldOptions(this)">
+            <option value="dropdown">Dropdown (Select)</option>
+            <option value="radio">Radio (Selectable)</option>
+            <option value="text">Text Input</option>
+            <option value="number">Number Input</option>
+          </select>
+        </div>
+        <div class="form-group edit-options-group" style="grid-column: span 2;">
+          <label>Options (one per line)</label>
+          <textarea class="form-control edit-field-options" rows="3" placeholder="Option 1&#10;Option 2"></textarea>
+        </div>
+        <div class="form-group">
+          <label>Default Value</label>
+          <input type="text" class="form-control edit-field-default" placeholder="e.g. Standard">
+        </div>
+        <div class="form-group">
+          <label>Price Differentials (format: Option: price)</label>
+          <textarea class="form-control edit-field-prices" rows="3" placeholder="Option 1: 0&#10;Option 2: 5000"></textarea>
+        </div>
+      </div>
+    </div>
+  `;
+  container.insertAdjacentHTML('beforeend', html);
+};
+
+window.toggleEditFieldOptions = function(select) {
+  const row = select.closest('.aci-field-row');
+  const optsGroup = row.querySelector('.edit-options-group');
+  if (select.value === 'text' || select.value === 'number') {
+    optsGroup.style.display = 'none';
+  } else {
+    optsGroup.style.display = 'block';
+  }
+};
+
+window.saveEditedCustomItemSection = function() {
+  const sectionName = document.getElementById('edit-section-name').value.trim();
+  if (!sectionName) { alert('Please enter a section name.'); return; }
+
+  const fieldRows = document.querySelectorAll('#edit-fields-container .aci-field-row');
+  if (fieldRows.length === 0) { alert('Please add at least one field.'); return; }
+
+  loadState();
+  ensureCustomItemDefinitions();
+  const section = STATE.customItemDefinitions.find(s => s.id === _editSectionId);
+  if (!section) { alert('Section not found.'); return; }
+
+  section.name = sectionName;
+  section.fields = [];
+
+  fieldRows.forEach((row, idx) => {
+    const name = row.querySelector('.edit-field-name').value.trim();
+    if (!name) return;
+    const type = row.querySelector('.edit-field-type').value;
+    const defaultVal = row.querySelector('.edit-field-default').value.trim();
+    let options = [];
+    const optsEl = row.querySelector('.edit-field-options');
+    if (optsEl && (type === 'dropdown' || type === 'radio')) {
+      options = optsEl.value.split('\n').map(o => o.trim()).filter(o => o);
+    }
+    const pricesVal = row.querySelector('.edit-field-prices') ? row.querySelector('.edit-field-prices').value.trim() : '';
+    const priceDiffs = parsePriceDiffs(pricesVal);
+
+    section.fields.push({
+      id: `cf_${_editSectionId}_${idx}`,
+      name,
+      type,
+      options: options.length > 0 ? options : [],
+      defaultValue: defaultVal,
+      priceDiffs: Object.keys(priceDiffs).length > 0 ? priceDiffs : undefined
+    });
+  });
+
+  if (section.fields.length === 0) { alert('Please fill in at least one valid field.'); return; }
+
+  saveState();
+  closeEditCustomItemSectionModal();
+  renderCustomSectionsList();
+  renderConfiguratorFormInputs(WIZARD_PRODUCT_TEMPLATES[wizardState.subtype]);
+  calculateWizardPricing();
+  logSystemActivity(`Updated custom spec section: "${sectionName}".`);
+  alert(`Custom section "${sectionName}" updated successfully!`);
+};
+
+// Render custom sections in the configurator
+function getCustomItemSpecs() {
+  loadState();
+  ensureCustomItemDefinitions();
+  return STATE.customItemDefinitions || [];
+}
 
 window.updateManualBasePrice = function(val) {
   wizardState.customBasePrice = parseFloat(val) || 0;
@@ -1013,7 +1553,7 @@ function calculateWizardPricing() {
   let upgradesHtml = '';
   let upgradesTotal = 0;
 
-  // Calculate Spec Upgrades
+  // Calculate Spec Upgrades (built-in)
   template.specs.forEach(spec => {
     const selectedVal = wizardState.specs[spec.id];
     if (selectedVal) {
@@ -1029,6 +1569,26 @@ function calculateWizardPricing() {
         `;
       }
     }
+  });
+
+  // Calculate Custom Item Spec Upgrades
+  const customSections = getCustomItemSpecs();
+  customSections.forEach(section => {
+    section.fields.forEach(field => {
+      const selectedVal = wizardState.specs[field.id];
+      if (selectedVal && field.priceDiffs && field.priceDiffs[selectedVal] !== undefined) {
+        const diff = field.priceDiffs[selectedVal];
+        upgradesTotal += diff;
+        if (diff !== 0) {
+          upgradesHtml += `
+            <div class="preview-row indent">
+              <span>+ [${section.name}] ${field.name} (${selectedVal})</span>
+              <span>${diff > 0 ? '+' : ''}₹${diff.toLocaleString('en-IN')}</span>
+            </div>
+          `;
+        }
+      }
+    });
   });
 
   // Calculate Custom Mods
@@ -1153,7 +1713,7 @@ function generateQuotationFinalReview() {
   const heightVal = document.getElementById('w-dim-height') ? document.getElementById('w-dim-height').value : template.dimensions.height;
   const widthVal = document.getElementById('w-dim-width') ? document.getElementById('w-dim-width').value : template.dimensions.width;
 
-  // Populate spec list elements dynamically
+  // Populate spec list elements dynamically (built-in specs)
   Object.keys(wizardState.specs).forEach(key => {
     const specInfo = template.specs.find(s => s.id === key);
     if (specInfo) {
@@ -1164,6 +1724,22 @@ function generateQuotationFinalReview() {
         </div>
       `;
     }
+  });
+
+  // Populate custom item specs
+  const customSections = getCustomItemSpecs();
+  customSections.forEach(section => {
+    section.fields.forEach(field => {
+      const val = wizardState.specs[field.id];
+      if (val) {
+        specsListHtml += `
+          <div class="pdf-specs-item">
+            <span style="font-weight:bold; min-width: 26px;">${count++}.</span>
+            <span>[${section.name}] ${field.name} = ${val}</span>
+          </div>
+        `;
+      }
+    });
   });
 
   // Add dimensions to specs checklist
@@ -1281,6 +1857,17 @@ window.convertWizardToWorkOrder = function() {
     if (specInfo) {
       specDetails.push(`${specInfo.name}: ${wizardState.specs[key]}`);
     }
+  });
+
+  // Add custom item specs
+  const customSections = getCustomItemSpecs();
+  customSections.forEach(section => {
+    section.fields.forEach(field => {
+      const val = wizardState.specs[field.id];
+      if (val) {
+        specDetails.push(`[${section.name}] ${field.name}: ${val}`);
+      }
+    });
   });
 
   wizardState.customMods.forEach(mod => {
