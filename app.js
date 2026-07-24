@@ -419,24 +419,44 @@ function initPortalLogin() {
     portal.style.display = 'flex';
     document.body.style.overflow = 'hidden';
     gsap.fromTo(portal, { opacity: 0 }, { opacity: 1, duration: 0.4 });
+
+    // If already logged in, show dashboard view inside portal
+    if (localStorage.getItem('adminLoggedIn') === 'true') {
+      showDashboardInPortal();
+    }
+  };
+
+  const showDashboardInPortal = (url) => {
+    const loginScreen = document.getElementById('portal-login-screen');
+    const dashView = document.getElementById('portal-dashboard-view');
+    const iframe = document.getElementById('portal-dashboard-iframe');
+    if (loginScreen) loginScreen.style.display = 'none';
+    if (dashView) {
+      dashView.style.display = 'flex';
+      iframe.src = url || 'erp.html?module=dashboard';
+    }
   };
 
   const closePortal = () => {
     gsap.to(portal, { opacity: 0, duration: 0.3, onComplete: () => {
       portal.style.display = 'none';
       document.body.style.overflow = '';
+      // Reset to login view next time unless logged in
+      if (localStorage.getItem('adminLoggedIn') !== 'true') {
+        const loginScreen = document.getElementById('portal-login-screen');
+        const dashView = document.getElementById('portal-dashboard-view');
+        const iframe = document.getElementById('portal-dashboard-iframe');
+        if (loginScreen) loginScreen.style.display = 'flex';
+        if (dashView) dashView.style.display = 'none';
+        if (iframe) iframe.src = '';
+      }
     }});
   };
 
   [openBtn, openMobileBtn, openFooterBtn].forEach(btn => {
     if (btn) {
       btn.addEventListener('click', (e) => {
-        if (localStorage.getItem('adminLoggedIn') === 'true') {
-          // If already logged in, redirect straight to dashboard page
-          window.open('erp.html?module=dashboard', '_blank');
-        } else {
-          openPortal();
-        }
+        openPortal();
       });
     }
   });
@@ -448,7 +468,8 @@ function initPortalLogin() {
     btn.addEventListener('click', (e) => {
       const prodCode = e.currentTarget.getAttribute('data-product');
       if (localStorage.getItem('adminLoggedIn') === 'true') {
-        window.open(`erp.html?module=quotations&product=${prodCode}`, '_blank');
+        openPortal();
+        showDashboardInPortal(`erp.html?module=quotations&product=${prodCode}`);
       } else {
         openPortal();
         // Save targeted configuration to auto-redirect after successful login
@@ -468,17 +489,15 @@ function initPortalLogin() {
       if (email.trim() !== '') {
         localStorage.setItem('adminLoggedIn', 'true');
         logSystemActivity('Admin signed in successfully.');
-        
-        closePortal();
         checkLoginState();
 
-        // Redirect to configuration if pre-targeted
+        // Redirect to configuration if pre-targeted, else show dashboard inline
         const redirectTarget = localStorage.getItem('redirectAfterLogin');
         if (redirectTarget) {
           localStorage.removeItem('redirectAfterLogin');
-          window.open(redirectTarget, '_blank');
+          showDashboardInPortal(redirectTarget);
         } else {
-          window.open('erp.html?module=dashboard', '_blank');
+          showDashboardInPortal();
         }
       }
     });
