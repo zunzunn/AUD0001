@@ -728,8 +728,8 @@ function loadDefaultSpecsForSubtype(subtypeKey) {
 function getEffectiveSpecPriceDiff(spec, opt) {
   if (!spec || !opt) return 0;
 
-  const customOpts = STATE.adminPricing?.customFieldOptions?.[spec.id];
-  if (customOpts) {
+  const customOpts = getCustomFieldOptions(spec.id);
+  if (customOpts.length > 0) {
     const match = customOpts.find(c => c.name === opt);
     if (match) return match.priceDiff;
   }
@@ -766,7 +766,7 @@ function renderConfiguratorFormInputs(template) {
       let controlHtml = '';
 
       const hasCustom = spec.options && spec.options.some(o => o.toLowerCase() === 'custom');
-      const customOpts = (STATE.adminPricing?.customFieldOptions?.[spec.id]) || [];
+      const customOpts = getCustomFieldOptions(spec.id);
       const curCustomDesc = wizardState.specs[spec.id + '_custom_desc'] || '';
       const curCustomPrice = wizardState.specs[spec.id + '_custom_price'] || '';
       const customDetailsHtml = hasCustom ? `
@@ -902,7 +902,7 @@ function renderCustomItemSpecControls() {
       let controlHtml = '';
 
       const hasCustom = field.options && field.options.some(o => o.toLowerCase() === 'custom');
-      const customOpts = (STATE.adminPricing?.customFieldOptions?.[field.id]) || [];
+      const customOpts = getCustomFieldOptions(field.id);
       const curCustomDesc = wizardState.specs[field.id + '_custom_desc'] || '';
       const curCustomPrice = wizardState.specs[field.id + '_custom_price'] || '';
       const customDetailsHtml = hasCustom ? `
@@ -1035,28 +1035,37 @@ window.updateSpecCustomPrice = function(specId, val) {
 };
 
 function getCustomOptPriceDiff(specId, optName) {
-  const opts = STATE.adminPricing?.customFieldOptions?.[specId];
+  const opts = getCustomFieldOptions(specId);
   if (!opts) return 0;
   const match = opts.find(c => c.name === optName);
   return match ? match.priceDiff : 0;
+}
+
+function getCustomFieldKey(specId) {
+  return (wizardState.subtype || 'default') + '_' + specId;
+}
+
+function getCustomFieldOptions(specId) {
+  return STATE.adminPricing?.customFieldOptions?.[getCustomFieldKey(specId)] || [];
 }
 
 window.addCustomFieldOption = function(specId, specName) {
   loadState();
   if (!STATE.adminPricing) STATE.adminPricing = {};
   if (!STATE.adminPricing.customFieldOptions) STATE.adminPricing.customFieldOptions = {};
-  if (!STATE.adminPricing.customFieldOptions[specId]) STATE.adminPricing.customFieldOptions[specId] = [];
+  const key = getCustomFieldKey(specId);
+  if (!STATE.adminPricing.customFieldOptions[key]) STATE.adminPricing.customFieldOptions[key] = [];
 
   const desc = document.getElementById(`w-spec-${specId}-custom-desc`)?.value?.trim();
   const price = parseFloat(document.getElementById(`w-spec-${specId}-custom-price`)?.value) || 0;
 
   if (!desc) { alert('Please enter a description for the custom option.'); return; }
 
-  const existing = STATE.adminPricing.customFieldOptions[specId].find(c => c.name === desc);
+  const existing = STATE.adminPricing.customFieldOptions[key].find(c => c.name === desc);
   if (existing) {
     existing.priceDiff = price;
   } else {
-    STATE.adminPricing.customFieldOptions[specId].push({ name: desc, priceDiff: price });
+    STATE.adminPricing.customFieldOptions[key].push({ name: desc, priceDiff: price });
   }
 
   document.getElementById(`w-spec-${specId}-custom-desc`).value = '';
@@ -1074,7 +1083,8 @@ window.addCustomFieldOption = function(specId, specName) {
 window.deleteCustomFieldOption = function(specId, optName) {
   if (!confirm(`Delete custom option "${optName}"?`)) return;
   loadState();
-  const opts = STATE.adminPricing?.customFieldOptions?.[specId];
+  const key = getCustomFieldKey(specId);
+  const opts = STATE.adminPricing?.customFieldOptions?.[key];
   if (!opts) return;
   const idx = opts.findIndex(c => c.name === optName);
   if (idx !== -1) {
@@ -1096,7 +1106,16 @@ window.deleteCustomFieldOption = function(specId, optName) {
 
 window.openCustomItemsManagerModal = function() {
   loadState();
-  const opts = STATE.adminPricing?.customFieldOptions || {};
+  const allOpts = STATE.adminPricing?.customFieldOptions || {};
+  const prefix = getCustomFieldKey('');
+  // Only show items for current subtype
+  const opts = {};
+  Object.keys(allOpts).forEach(k => {
+    if (k.startsWith(prefix)) {
+      const specId = k.slice(prefix.length);
+      opts[specId] = allOpts[k];
+    }
+  });
   const template = WIZARD_PRODUCT_TEMPLATES[wizardState.subtype];
   const container = document.getElementById('custom-items-manager-body');
   if (!container) return;
@@ -1815,7 +1834,7 @@ window.openPartPricingMatrixModal = function() {
       });
 
       // Show custom options in pricing matrix with delete
-      const customOpts = STATE.adminPricing?.customFieldOptions?.[spec.id] || [];
+      const customOpts = getCustomFieldOptions(spec.id);
       customOpts.forEach(opt => {
         html += `
           <div class="part-price-item-card" data-option-name="${opt.name.toLowerCase()}" style="display:flex; align-items:center; justify-content:space-between; background:#F0FDF4; padding:6px 10px; border-radius:6px; border:1px solid #BBF7D0;">
@@ -1907,7 +1926,7 @@ window.saveComponentPartPricingFromModal = function() {
     }
 
     // Also save custom option prices
-    const customOpts = STATE.adminPricing?.customFieldOptions?.[specId];
+    const customOpts = STATE.adminPricing?.customFieldOptions?.[getCustomFieldKey(specId)];
     if (customOpts) {
       const match = customOpts.find(c => c.name === option);
       if (match) match.priceDiff = val;
