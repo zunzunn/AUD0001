@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Nexfra Manufacturing | Heavy Duty Trailers & Tippers</title>
+  <meta name="description" content="Nexfra Manufacturing India Pvt. Ltd. delivers premium flat bed trailers, tip trailers, side wall trailers, and tippers. Precision heavy engineering built for strength and reliability.">
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Stylesheets -->
+  
+  <!-- GSAP for Smooth Animations -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/styles-wO8o_VKh.css">
+</head>
+<body>
+
+  <!-- Admin Portal Top Navigation Bar (Visible only when logged in) -->
+  <div class="admin-top-bar" id="admin-top-bar" style="display: none;">
+    <div class="container admin-bar-container">
+      <div class="admin-status">
+        <span class="pulse-indicator"></span>
+        <span><strong>NEXFRA CONTROL HUB</strong> (Administrator)</span>
+      </div>
+      <nav class="admin-nav-links">
+        <a href="erp.html?module=dashboard" target="_blank" class="admin-bar-link">Overview</a>
+        <a href="erp.html?module=quotations" target="_blank" class="admin-bar-link">Sales & Quotes</a>
+        <a href="erp.html?module=status" target="_blank" class="admin-bar-link">Production Board</a>
+        <a href="erp.html?module=accounts" target="_blank" class="admin-bar-link">Finance Ledger</a>
+      </nav>
+      <button class="btn btn-outline btn-xs" id="admin-logout-btn">Logout</button>
+    </div>
+  </div>
+
+  <!-- Navigation Bar -->
+  <header class="main-header">
+    <div class="container header-container">
+      <div class="logo">
+        <a href="#home">
+          <span class="logo-accent">NEX</span>FRA
+        </a>
+      </div>
+      <nav class="nav-menu">
+        <a href="#home" class="nav-link active">Home</a>
+        <a href="#about" class="nav-link">About</a>
+        <a href="#products" class="nav-link">Products</a>
+        <a href="#process" class="nav-link">Manufacturing</a>
+        <a href="#industries" class="nav-link">Industries</a>
+        <a href="#contact" class="nav-link">Contact</a>
+      </nav>
+      <div class="nav-actions">
+        <button class="btn btn-primary" id="open-portal-btn">
+          <svg class="icon" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+          Employee Login
+        </button>
+        <button class="mobile-nav-toggle" aria-label="Toggle navigation">
+          <span></span>
+          <span></span>
+          <span></span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile Navigation Overlay -->
+  <div class="mobile-nav-overlay">
+    <nav class="mobile-nav-menu">
+      <a href="#home" class="mobile-link">Home</a>
+      <a href="#about" class="mobile-link">About</a>
+      <a href="#products" class="mobile-link">Products</a>
+      <a href="#process" class="mobile-link">Manufacturing</a>
+      <a href="#industries" class="mobile-link">Industries</a>
+      <a href="#contact" class="mobile-link">Contact</a>
+      <button class="btn btn-primary w-full" id="open-portal-mobile-btn">
+        <svg class="icon" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+        Employee Login
+      </button>
+    </nav>
+  </div>
+
+  <!-- Landing Page Content Wrap -->
+  <main class="landing-content" id="home">
+    
+    <!-- Hero Section -->
+    <section class="hero-section">
+      <div class="hero-bg" style="background-image: linear-gradient(180deg, rgba(26,26,26,0.85) 0%, rgba(26,26,26,0.6) 50%, rgba(26,26,26,0.9) 100%), url('/assets/nexfra_hero-NqD3WG3k.jpg');"></div>
+      <div class="container hero-container">
+        <div class="hero-content">
+          <div class="badge hero-badge">Heavy Engineering Precision</div>
+          <h1 class="hero-title">Engineering Heavy Duty <span class="highlight">Trailers & Tippers</span></h1>
+          <p class="hero-desc">Built for strength. Engineered for reliability. Nexfra Manufacturing delivers industry-leading commercial vehicles designed to withstand the toughest operations across India.</p>
+          <div class="hero-actions">
+            <a href="#products" class="btn btn-primary btn-lg">Explore Range</a>
+            <a href="#contact" class="btn btn-outline btn-lg">Request a Quote</a>
+          </div>
+        </div>
+        <div class="hero-features">
+          <div class="hero-feat-card">
+            <span class="feat-num">01</span>
+            <h3>Premium Materials</h3>
+            <p>We use high-tensile ST52 and Hardox wear-resistant steel for maximum cargo capacity and lifetime.</p>
+          </div>
+          <div class="hero-feat-card">
+            <span class="feat-num">02</span>
+            <h3>Welding Integrity</h3>
+            <p>Every structural weld undergoes stringent ultrasonic testing to eliminate joint failure risks.</p>
+          </div>
+          <div class="hero-feat-card">
+            <span class="feat-num">03</span>
+            <h3>IS Standard Compliant</h3>
+            <p>Fully compliant with ARAI and Indian Road Standards for safety, braking, and load distribution.</p>
+          </div>
+        </div>
+      </div>
+      <div class="scroll-indicator">
+        <div class="mouse">
+          <div class="wheel"></div>
+        </div>
+        <span>Scroll Down</span>
+      </div>
+    </section>
+
+    <!-- About Section -->
+    <section class="about-section" id="about">
+      <div class="container">
+        <div class="grid grid-2-col items-center gap-xl">
+          <div class="about-text-wrap">
+            <div class="badge">Who We Are</div>
+            <h2 class="section-title">Strength. Reliability. Precision.</h2>
+            <p class="section-desc">Nexfra Manufacturing India Pvt. Ltd. is a premier heavy engineering fabricator specializing in advanced trailer and tipper body manufacturing. Based in our state-of-the-art facility, we deploy robotic welding, CNC cutting, and computerized quality checks to deliver transport solutions that never compromise.</p>
+            <p class="mb-lg">We serve large logistics companies, mining operators, and infrastructure development giants who require vehicles that can run 24/7 without structural fatigue. Our design philosophy combines lightweight engineering with rugged durability to maximize payloads.</p>
+            <div class="grid grid-2-col gap-md">
+              <div class="checklist-item">
+                <svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Robotic & Automated Welding</span>
+              </div>
+              <div class="checklist-item">
+                <svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Hardox Certified Body Shop</span>
+              </div>
+              <div class="checklist-item">
+                <svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Automated Shot Blasting</span>
+              </div>
+              <div class="checklist-item">
+                <svg class="check-icon" viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg>
+                <span>Custom Built Templates</span>
+              </div>
+            </div>
+          </div>
+          <div class="about-visual-wrap">
+            <div class="stats-panel">
+              <div class="stat-card">
+                <span class="stat-number" data-target="15">0</span><span class="stat-plus">+</span>
+                <span class="stat-label">Years of Experience</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-number" data-target="5000">0</span><span class="stat-plus">+</span>
+                <span class="stat-label">Trailers Delivered</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-number" data-target="45">0</span><span class="stat-plus">k+</span>
+                <span class="stat-label">Tons Steel Processed</span>
+              </div>
+              <div class="stat-card">
+                <span class="stat-number" data-target="100">0</span><span class="stat-percent">%</span>
+                <span class="stat-label">QC Inspections Passed</span>
+              </div>
+            </div>
+            <div class="about-quote-box">
+              <p>"Our mission is to build infrastructure support systems that outlast the roads they traverse."</p>
+              <cite>— Chief Operations Officer, Nexfra</cite>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Products Section -->
+    <section class="products-section" id="products">
+      <div class="container">
+        <div class="section-header text-center">
+          <div class="badge">Our Fleet</div>
+          <h2 class="section-title">Heavy-Duty Product Range</h2>
+          <p class="section-desc max-w-md mx-auto">Engineered to standards of extreme durability. Select a category below to see technical specifications and configure quotations.</p>
+        </div>
+        
+        <div class="product-grid">
+          <!-- Flat Bed Trailer -->
+          <div class="product-card">
+            <div class="product-img-wrap">
+              <img src="/assets/flatbed_trailer-BaiHwITw.jpg" alt="Flat Bed Trailer" class="product-img">
+              <div class="product-overlay">
+                <button class="btn btn-primary configure-product-btn" data-product="flatbed">Configure & Quote</button>
+              </div>
+            </div>
+            <div class="product-body">
+              <h3>Flat Bed Trailer</h3>
+              <p class="product-desc">High-strength cargo trailer designed for heavy container transport and machinery haulage.</p>
+              <ul class="product-specs-list">
+                <li><strong>Beam:</strong> Submerged Arc Welded Main Beam</li>
+                <li><strong>Axles:</strong> 3 x 13T heavy-duty axles</li>
+                <li><strong>Suspension:</strong> Heavy duty mechanical leaf spring</li>
+                <li><strong>Floor:</strong> 4mm Chequered Plate</li>
+              </ul>
+              <div class="product-footer">
+                <span class="price-indicator">Base Price: ₹8,50,000</span>
+                <button class="btn btn-outline btn-sm configure-product-btn" data-product="flatbed">Configure</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tip Trailer -->
+          <div class="product-card">
+            <div class="product-img-wrap">
+              <img src="/assets/tip_trailer-CNI1GP_o.jpg" alt="Tip Trailer" class="product-img">
+              <div class="product-overlay">
+                <button class="btn btn-primary configure-product-btn" data-product="tiptrailer">Configure & Quote</button>
+              </div>
+            </div>
+            <div class="product-body">
+              <h3>Tip Trailer</h3>
+              <p class="product-desc">Advanced tipping semi-trailer equipped with multi-stage heavy-duty hydraulic cylinders.</p>
+              <ul class="product-specs-list">
+                <li><strong>Capacity:</strong> 30 CBM to 40 CBM payload</li>
+                <li><strong>Cylinder:</strong> High-performance Multi-stage Hydraulic</li>
+                <li><strong>Structure:</strong> High strength wear-resistant steel</li>
+                <li><strong>Axles:</strong> Tandem/Tridem options</li>
+              </ul>
+              <div class="product-footer">
+                <span class="price-indicator">Base Price: ₹14,20,000</span>
+                <button class="btn btn-outline btn-sm configure-product-btn" data-product="tiptrailer">Configure</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Box Body Tipper -->
+          <div class="product-card">
+            <div class="product-img-wrap">
+              <img src="/assets/box_body_tipper-CgRqPuY4.jpg" alt="Box Body Tipper" class="product-img">
+              <div class="product-overlay">
+                <button class="btn btn-primary configure-product-btn" data-product="boxbody">Configure & Quote</button>
+              </div>
+            </div>
+            <div class="product-body">
+              <h3>Box Body Tipper</h3>
+              <p class="product-desc">Rigid chassis tipper body designed for sand, gravel, aggregate, and dry bulk hauling.</p>
+              <ul class="product-specs-list">
+                <li><strong>Capacity Options:</strong> 14 to 25 CBM templates</li>
+                <li><strong>Floor:</strong> 8mm heavy-duty MS floor</li>
+                <li><strong>Side Walls:</strong> 6mm thick reinforced panels</li>
+                <li><strong>Mechanism:</strong> Underbody hydraulic hoist / Front end</li>
+              </ul>
+              <div class="product-footer">
+                <span class="price-indicator">Base Price: ₹7,80,000</span>
+                <button class="btn btn-outline btn-sm configure-product-btn" data-product="boxbody">Configure</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Rock Body Tipper -->
+          <div class="product-card">
+            <div class="product-img-wrap">
+              <img src="/assets/rock_body_tipper-sd4I-u8-.jpg" alt="Rock Body Tipper" class="product-img">
+              <div class="product-overlay">
+                <button class="btn btn-primary configure-product-btn" data-product="rockbody">Configure & Quote</button>
+              </div>
+            </div>
+            <div class="product-body">
+              <h3>Rock Body Tipper</h3>
+              <p class="product-desc">Extreme-durability heavy tipper utilizing certified Hardox wear plate for mining operations.</p>
+              <ul class="product-specs-list">
+                <li><strong>Steel:</strong> Hardox 450 Grade certified</li>
+                <li><strong>Floor:</strong> 10mm high-impact wear steel</li>
+                <li><strong>Breakers:</strong> Tailored rock breakers integrated</li>
+                <li><strong>Application:</strong> Heavy mining, rock, iron ore</li>
+              </ul>
+              <div class="product-footer">
+                <span class="price-indicator">Base Price: ₹11,50,000</span>
+                <button class="btn btn-outline btn-sm configure-product-btn" data-product="rockbody">Configure</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Manufacturing Process -->
+    <section class="process-section" id="process">
+      <div class="container">
+        <div class="section-header text-center">
+          <div class="badge">Workflow</div>
+          <h2 class="section-title">The Manufacturing Standard</h2>
+          <p class="section-desc max-w-md mx-auto">Six rigorous phases of industrial manufacturing that guarantee structural integrity and long operating lifetimes.</p>
+        </div>
+        
+        <div class="process-timeline">
+          <div class="process-step">
+            <div class="step-number">01</div>
+            <div class="step-content">
+              <h3>CNC Plasma Cutting</h3>
+              <p>High-precision computer-guided plasma cutters slice heavy carbon steel plates matching the exact template dimensions. Error margin is under 0.5mm.</p>
+            </div>
+          </div>
+          <div class="process-step">
+            <div class="step-number">02</div>
+            <div class="step-content">
+              <h3>Jig Fabrication</h3>
+              <p>Steel beams are aligned on massive, robust jigs. This ensures that chassis tracking, alignment, and load distribution match critical design plans.</p>
+            </div>
+          </div>
+          <div class="process-step">
+            <div class="step-number">03</div>
+            <div class="step-content">
+              <h3>Robotic Welding</h3>
+              <p>Chassis members are joined using high-amperage robotic multi-pass welders. Important stress points are reinforced manually by certified welders.</p>
+            </div>
+          </div>
+          <div class="process-step">
+            <div class="step-number">04</div>
+            <div class="step-content">
+              <h3>Shot Blasting & Priming</h3>
+              <p>Chassis are shot blasted in an automated chamber to remove mill scale and rust, preparing the steel for a robust epoxy-zinc rich primer coat.</p>
+            </div>
+          </div>
+          <div class="process-step">
+            <div class="step-number">05</div>
+            <div class="step-content">
+              <h3>Polyurethane Painting</h3>
+              <p>Two layers of premium industrial polyurethane topcoat are applied inside a heated spray booth, creating a tough barrier against chemical corrosion.</p>
+            </div>
+          </div>
+          <div class="process-step">
+            <div class="step-number">06</div>
+            <div class="step-content">
+              <h3>QC & Suspension Rigging</h3>
+              <p>Axles, air braking systems, and suspensions are rigged, followed by load-testing, weld UT checks, and ARAI-compliance inspections.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Industries Served Section -->
+    <section class="industries-section" id="industries">
+      <div class="container">
+        <div class="section-header text-center">
+          <div class="badge">Sectors</div>
+          <h2 class="section-title">Industries We Empower</h2>
+          <p class="section-desc max-w-md mx-auto">Nexfra vehicles operate in the country's most demanding sectors, delivering efficiency and reducing down-time.</p>
+        </div>
+        
+        <div class="grid grid-4-col gap-lg">
+          <div class="industry-card">
+            <div class="ind-icon-wrap">
+              <svg class="ind-icon" viewBox="0 0 24 24"><rect x="1" y="3" width="15" height="13"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg>
+            </div>
+            <h3>Logistics & Transport</h3>
+            <p>Engineered for high-volume flatbed freight and side-wall bulk transport across national highways.</p>
+          </div>
+          <div class="industry-card">
+            <div class="ind-icon-wrap">
+              <svg class="ind-icon" viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+            </div>
+            <h3>Mining & Quarrying</h3>
+            <p>Hardox tipper bodies built to resist extreme impact from rocks, ore, and gravel in open-cast mines.</p>
+          </div>
+          <div class="industry-card">
+            <div class="ind-icon-wrap">
+              <svg class="ind-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 21V9h6v12"/></svg>
+            </div>
+            <h3>Infrastructure & Roads</h3>
+            <p>Tip trailers and concrete aggregates tippers supporting road building and bridge constructions.</p>
+          </div>
+          <div class="industry-card">
+            <div class="ind-icon-wrap">
+              <svg class="ind-icon" viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            </div>
+            <h3>Agriculture & Bulk</h3>
+            <p>Specially customized trailers for bulk sugar cane, grain, and general agricultural logistics.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Testimonials Section -->
+    <section class="testimonials-section">
+      <div class="container">
+        <div class="section-header text-center">
+          <div class="badge">Trust</div>
+          <h2 class="section-title">What Our Customers Say</h2>
+        </div>
+        
+        <div class="grid grid-3-col gap-lg">
+          <div class="testimonial-card">
+            <p class="test-text">"Nexfra's rock bodies have been operating in our mining site for 2 years without a single structural failure. The Hardox plate steel is highly durable under intense loading cycles."</p>
+            <div class="test-author">
+              <h4>Harish Mehta</h4>
+              <span>Director, Gati Mining & Minerals</span>
+            </div>
+          </div>
+          <div class="testimonial-card">
+            <p class="test-text">"We upgraded our cargo fleet to Nexfra Flat Bed trailers. The main chassis beam tracking is perfectly balanced, which has reduced our tyre wear by nearly 18%."</p>
+            <div class="test-author">
+              <h4>Rajesh K.</h4>
+              <span>Head of Logistics, Golden Roadlines</span>
+            </div>
+          </div>
+          <div class="testimonial-card">
+            <p class="test-text">"The Quotation Builder and ERP coordination are impressive. We requested custom modifications to a Side Wall trailer, received the quote instantly, and order tracking was highly transparent."</p>
+            <div class="test-author">
+              <h4>Sandeep Singh</h4>
+              <span>Operations Head, V-Trans Cargo India</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact & Enquiry Section -->
+    <section class="contact-section" id="contact">
+      <div class="container">
+        <div class="grid grid-2-col gap-xl">
+          <div class="contact-info">
+            <div class="badge">Get in Touch</div>
+            <h2 class="section-title">Let's Discuss Your Fleet Requirements</h2>
+            <p class="section-desc">Have a custom vehicle specification or looking to order in bulk? Contact our sales office today. Our engineering team will review your payload needs and provide optimized layouts.</p>
+            
+            <div class="contact-details">
+              <div class="contact-detail-item">
+                <svg class="contact-icon" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+                <div>
+                  <h4>Manufacturing Unit</h4>
+                  <p>Plot 48, Industrial Area Phase II, Chennai, TN, India</p>
+                </div>
+              </div>
+              <div class="contact-detail-item">
+                <svg class="contact-icon" viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                <div>
+                  <h4>Sales Helpline</h4>
+                  <p>+91 44 2838 9922 / +91 98402 12345</p>
+                </div>
+              </div>
+              <div class="contact-detail-item">
+                <svg class="contact-icon" viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                <div>
+                  <h4>Engineering Support</h4>
+                  <p>sales@nexframfg.com | design@nexframfg.com</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="contact-form-card">
+            <h3>Send Fleet Enquiry</h3>
+            <form id="enquiry-form">
+              <div class="form-group">
+                <label for="contact-name">Full Name</label>
+                <input type="text" id="contact-name" class="form-control" required placeholder="John Doe">
+              </div>
+              <div class="grid grid-2-col gap-md">
+                <div class="form-group">
+                  <label for="contact-email">Email Address</label>
+                  <input type="email" id="contact-email" class="form-control" required placeholder="john@company.com">
+                </div>
+                <div class="form-group">
+                  <label for="contact-phone">Phone Number</label>
+                  <input type="tel" id="contact-phone" class="form-control" required placeholder="+91 98765 43210">
+                </div>
+              </div>
+              <div class="form-group">
+                <label for="contact-company">Company Name</label>
+                <input type="text" id="contact-company" class="form-control" required placeholder="ABC Logistics Pvt Ltd">
+              </div>
+              <div class="form-group">
+                <label for="contact-product">Product Interest</label>
+                <select id="contact-product" class="form-control">
+                  <option value="flatbed">Flat Bed Trailer</option>
+                  <option value="tiptrailer">Tip Trailer</option>
+                  <option value="boxbody">Box Body Tipper</option>
+                  <option value="rockbody">Rock Body Tipper</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="contact-message">Enquiry Details / Requirements</label>
+                <textarea id="contact-message" class="form-control" rows="4" placeholder="Mention volume requirements, thickness modifications, or specific chassis models..."></textarea>
+              </div>
+              <button type="submit" class="btn btn-primary w-full">Submit Enquiry</button>
+            </form>
+            <div id="enquiry-success" class="alert alert-success mt-md" style="display:none;">
+              <strong>Enquiry Submitted!</strong> Our fleet sales representative will contact you with initial drawing proposals within 24 hours.
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="main-footer">
+    <div class="container">
+      <div class="grid grid-4-col gap-lg mb-xl">
+        <div class="footer-col">
+          <div class="logo mb-md">
+            <span class="logo-accent">NEX</span>FRA
+          </div>
+          <p>Nexfra Manufacturing India Pvt. Ltd. represents durability, engineering integrity, and operational transparency in heavy industrial transport fabrication.</p>
+        </div>
+        <div class="footer-col">
+          <h4>Products</h4>
+          <ul>
+            <li><a href="#products">Flat Bed Trailers</a></li>
+            <li><a href="#products">Side Wall Trailers</a></li>
+            <li><a href="#products">Tip Trailers</a></li>
+            <li><a href="#products">Box Body Tippers</a></li>
+            <li><a href="#products">Rock Body Tippers</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Company</h4>
+          <ul>
+            <li><a href="#about">About Nexfra</a></li>
+            <li><a href="#process">Manufacturing Setup</a></li>
+            <li><a href="#industries">Industries Served</a></li>
+            <li><a href="#contact">Careers in Fabrication</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4>Portal</h4>
+          <p>Internal operating system for Sales, Accounts, Production, and Administration.</p>
+          <button class="btn btn-outline w-full mt-sm" id="open-portal-footer-btn">
+            <svg class="icon" viewBox="0 0 24 24"><path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M15 12H3"/></svg>
+            Employee Login
+          </button>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <p>&copy; 2026 Nexfra Manufacturing India Pvt. Ltd. All rights reserved. All structural standards conform to BIS, ARAI and Motor Vehicle Rules.</p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ========================================== -->
+  <!-- ADMINISTRATOR LOGIN MODAL -->
+  <!-- ========================================== -->
+  <div class="erp-portal-container" id="erp-portal">
+    <header class="portal-header">
+      <div class="portal-logo">
+        <span class="logo-accent">NEX</span>FRA <span class="portal-badge">ADMIN PORTAL</span>
+      </div>
+      <button class="close-portal-btn" id="close-portal-btn" aria-label="Exit Portal">
+        <svg class="close-icon" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </header>
+
+    <div class="portal-body">
+      <div class="portal-login-screen" id="portal-login-screen">
+        <div class="login-card" style="max-width: 460px;">
+          <div class="login-header">
+            <h2>Administrator Sign In</h2>
+            <p>Access the Nexfra internal operating system to manage Sales, Production, Accounts, and System Pricing.</p>
+          </div>
+          <form class="login-form" id="portal-login-form">
+            <div class="form-group">
+              <label for="login-email">Admin ID / Email</label>
+              <input type="text" id="login-email" class="form-control" value="admin@nexframfg.com" required>
+            </div>
+            <div class="form-group">
+              <label for="login-password">Access Password</label>
+              <input type="password" id="login-password" class="form-control" value="••••••••" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-full btn-lg">Launch Admin Portal</button>
+          </form>
+        </div>
+      </div>
+      <div class="portal-dashboard-view" id="portal-dashboard-view" style="display: none; width: 100%; height: 100%;">
+        <iframe id="portal-dashboard-iframe" src="" style="width: 100%; height: 100%; border: none;"></iframe>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
