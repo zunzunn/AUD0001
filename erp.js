@@ -2291,6 +2291,13 @@ function generateQuotationFinalReview() {
 
   document.getElementById('w-pdf-words-val').innerText = priceToIndianWords(grandTotal);
 
+  // Set Client Name in Signoff
+  const clientDisplayName = c.name ? `${c.name} (${c.company})` : (c.company || 'Valued Client');
+  const signoffEl = document.getElementById('w-pdf-signoff-name');
+  if (signoffEl) signoffEl.innerText = clientDisplayName;
+  const modalSignoffEl = document.getElementById('pdf-modal-signoff-name');
+  if (modalSignoffEl) modalSignoffEl.innerText = clientDisplayName;
+
   // Specifications
   const specsContainer = document.getElementById('w-pdf-specs-list-container');
   let specsListHtml = '';
@@ -3040,5 +3047,12 @@ window.openPdfPreview = function(quoteId) {
   if (specsContainer) {
     specsContainer.innerHTML = specsHtml;
   }
+
+  const modalSignoffEl = document.getElementById('pdf-modal-signoff-name');
+  if (modalSignoffEl) {
+    const clientNameDisplay = client ? (client.contactPerson ? `${client.contactPerson} (${client.company})` : client.company) : 'Valued Client';
+    modalSignoffEl.innerText = clientNameDisplay;
+  }
+
   document.getElementById('pdf-preview-modal').classList.add('active');
 };
