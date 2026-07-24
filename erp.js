@@ -1318,50 +1318,127 @@ window.closeAddCustomItemSectionModal = function() {
   document.getElementById('add-custom-item-modal').classList.remove('active');
 };
 
-window.addFieldRowToModal = function() {
-  const container = document.getElementById('aci-fields-container');
-  document.getElementById('aci-no-fields-msg').style.display = 'none';
-  const idx = container.children.length;
-  const rowId = `aci-field-${Date.now()}`;
+window.addOptionChoiceRow = function(fieldRowId, defaultName = '', defaultPrice = 0, isDefault = false) {
+  const table = document.getElementById(`aci-opt-table-${fieldRowId}`);
+  if (!table) return;
+
+  const choiceId = `opt-choice-${Date.now()}-${Math.floor(Math.random()*10000)}`;
+
   const html = `
-    <div class="aci-field-row" id="${rowId}">
-      <div class="aci-field-row-header">
-        <span>Field #${idx + 1}</span>
-        <button type="button" onclick="removeFieldRowFromModal(this)" style="display:inline-flex;align-items:center;gap:4px;">
-          <svg style="width:12px;height:12px;" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          Remove
+    <div class="aci-opt-choice-row" id="${choiceId}" style="display:grid; grid-template-columns: 2fr 1.2fr 80px 32px; gap:8px; align-items:center; background:#FFFFFF; padding:8px 10px; border-radius:6px; border:1px solid #CBD5E1; margin-bottom:6px;">
+      <div>
+        <span style="font-size:0.7rem; font-weight:600; color:#64748B; display:block;">Option / Choice Name</span>
+        <input type="text" class="form-control form-control-sm aci-opt-name" placeholder="e.g. Air Suspension, Fuwa 3x13T" value="${defaultName}">
+      </div>
+      <div>
+        <span style="font-size:0.7rem; font-weight:600; color:#64748B; display:block;">Price Diff (₹)</span>
+        <div style="display:flex; align-items:center; gap:2px;">
+          <span style="font-size:0.75rem; color:#64748B;">₹</span>
+          <input type="number" class="form-control form-control-sm aci-opt-price" placeholder="0" value="${defaultPrice}">
+        </div>
+      </div>
+      <div style="text-align:center;">
+        <span style="font-size:0.7rem; font-weight:600; color:#64748B; display:block;">Default</span>
+        <input type="radio" name="default-opt-${fieldRowId}" class="aci-opt-is-default" ${isDefault ? 'checked' : ''} style="cursor:pointer;">
+      </div>
+      <div>
+        <button type="button" onclick="removeOptionChoiceRow('${choiceId}')" style="background:none; border:none; color:#EF4444; cursor:pointer; padding:4px;" title="Remove Option">
+          <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
       </div>
-      <div class="aci-field-grid">
-        <div class="form-group">
-          <label>Field Name</label>
-          <input type="text" class="form-control aci-field-name" placeholder="e.g. Battery Type, Voltage">
+    </div>
+  `;
+  table.insertAdjacentHTML('beforeend', html);
+};
+
+window.removeOptionChoiceRow = function(choiceId) {
+  const row = document.getElementById(choiceId);
+  if (row) row.remove();
+};
+
+function extractFieldOptionsAndPrices(fieldRowEl, fieldRowId) {
+  const choiceRows = fieldRowEl.querySelectorAll('.aci-opt-choice-row');
+  let options = [];
+  let priceDiffs = {};
+  let defaultVal = '';
+
+  choiceRows.forEach(cRow => {
+    const optName = cRow.querySelector('.aci-opt-name')?.value.trim();
+    const optPrice = parseFloat(cRow.querySelector('.aci-opt-price')?.value) || 0;
+    const isDefault = cRow.querySelector('.aci-opt-is-default')?.checked;
+
+    if (optName) {
+      options.push(optName);
+      priceDiffs[optName] = optPrice;
+      if (isDefault || !defaultVal) {
+        defaultVal = optName;
+      }
+    }
+  });
+
+  return { options, priceDiffs, defaultVal };
+}
+
+window.addFieldRowToModal = function() {
+  const container = document.getElementById('aci-fields-container');
+  const msg = document.getElementById('aci-no-fields-msg');
+  if (msg) msg.style.display = 'none';
+  const idx = container.children.length;
+  const rowId = `aci-field-${Date.now()}-${Math.floor(Math.random()*1000)}`;
+
+  const html = `
+    <div class="aci-field-row" id="${rowId}" style="background:#F8FAFC; border:1px solid #CBD5E1; border-radius:8px; padding:16px; margin-bottom:16px;">
+      <div class="aci-field-row-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid #E2E8F0; padding-bottom:8px;">
+        <span style="font-weight:700; font-size:0.85rem; color:#1E293B;">Field #${idx + 1}</span>
+        <button type="button" onclick="removeFieldRowFromModal(this)" style="background:none; border:1px solid #FCA5A5; color:#EF4444; border-radius:4px; padding:4px 8px; font-size:0.75rem; cursor:pointer; font-weight:600;">
+          ✕ Remove Field
+        </button>
+      </div>
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
+        <div>
+          <label style="font-size:0.75rem; font-weight:700; color:#334155; display:block; margin-bottom:4px;">Field / Parameter Name *</label>
+          <input type="text" class="form-control form-control-sm aci-field-name" placeholder="e.g. Suspension System, Axle Brand & Loading" style="font-weight:600;">
         </div>
-        <div class="form-group">
-          <label>Field Type</label>
-          <select class="form-control aci-field-type" onchange="toggleFieldOptionsInput(this)">
-            <option value="dropdown">Dropdown (Select)</option>
-            <option value="radio">Radio (Selectable)</option>
-            <option value="text">Text Input</option>
-            <option value="number">Number Input</option>
+        <div>
+          <label style="font-size:0.75rem; font-weight:700; color:#334155; display:block; margin-bottom:4px;">Control Type (Display Format) *</label>
+          <select class="form-control form-control-sm aci-field-type" onchange="toggleFieldOptionsInput(this)">
+            <option value="dropdown">Dropdown Select Menu (e.g. Mechanical Leaf Spring, Air Suspension)</option>
+            <option value="radio">Selectable Radio Buttons (e.g. York 3x13T, Fuwa 3x13T)</option>
+            <option value="checkbox">Checkbox (Yes/No)</option>
+            <option value="text">Text Input Field</option>
           </select>
         </div>
-        <div class="form-group aci-options-group" style="grid-column: span 2;">
-          <label>Options (one per line, for dropdown/radio only)</label>
-          <textarea class="form-control aci-field-options" placeholder="Option 1&#10;Option 2&#10;Option 3" rows="3"></textarea>
+      </div>
+
+      <div class="aci-default-text-group" style="display:none; margin-bottom:12px;">
+        <label style="font-size:0.75rem; font-weight:700; color:#334155; display:block; margin-bottom:4px;">Default Value</label>
+        <input type="text" class="form-control form-control-sm aci-field-default" placeholder="e.g. Standard Assembly">
+      </div>
+
+      <!-- VISUAL OPTIONS & PRICING TABLE BUILDER -->
+      <div class="aci-options-builder-container" style="background:#F1F5F9; border:1px solid #CBD5E1; border-radius:8px; padding:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <div>
+            <label style="font-size:0.775rem; font-weight:700; color:#1E293B;">Options & Price Differentials List</label>
+            <span class="section-hint" style="font-size:0.7rem; color:#64748B; display:block;">Enter choice names and their exact price addition (+) or discount (-).</span>
+          </div>
+          <button type="button" class="btn btn-outline btn-xs" onclick="addOptionChoiceRow('${rowId}')" style="background:#0284C7; color:#FFFFFF; border:none; font-weight:700; padding:4px 10px; border-radius:4px;">
+            + Add Option Row
+          </button>
         </div>
-        <div class="form-group">
-          <label>Default Value</label>
-          <input type="text" class="form-control aci-field-default" placeholder="e.g. Standard">
-        </div>
-        <div class="form-group">
-          <label>Price Differentials (format: Option: price, one per line)</label>
-          <textarea class="form-control aci-field-prices" placeholder="Option 1: 0&#10;Option 2: 5000&#10;Option 3: 10000" rows="3"></textarea>
+
+        <div class="aci-option-items-table" id="aci-opt-table-${rowId}">
+          <!-- Option Choice Rows Injected Here -->
         </div>
       </div>
     </div>
   `;
   container.insertAdjacentHTML('beforeend', html);
+
+  // Add initial default option rows for quick entry
+  addOptionChoiceRow(rowId, 'Option 1 (Standard)', 0, true);
+  addOptionChoiceRow(rowId, 'Option 2 (Upgrade)', 15000, false);
 };
 
 window.removeFieldRowFromModal = function(btn) {
@@ -1369,38 +1446,26 @@ window.removeFieldRowFromModal = function(btn) {
   if (row) {
     row.remove();
     const container = document.getElementById('aci-fields-container');
-    if (container.children.length === 0) {
-      document.getElementById('aci-no-fields-msg').style.display = 'block';
+    if (container && container.children.length === 0) {
+      const msg = document.getElementById('aci-no-fields-msg');
+      if (msg) msg.style.display = 'block';
     }
   }
 };
 
 window.toggleFieldOptionsInput = function(select) {
   const row = select.closest('.aci-field-row');
-  const optsGroup = row.querySelector('.aci-options-group');
-  const priceGroup = row.querySelector('.aci-field-grid .form-group:last-child');
-  if (select.value === 'text' || select.value === 'number') {
-    optsGroup.style.display = 'none';
+  const optsContainer = row.querySelector('.aci-options-builder-container');
+  const defaultTextGroup = row.querySelector('.aci-default-text-group');
+
+  if (select.value === 'text' || select.value === 'checkbox') {
+    if (optsContainer) optsContainer.style.display = 'none';
+    if (defaultTextGroup) defaultTextGroup.style.display = 'block';
   } else {
-    optsGroup.style.display = 'block';
+    if (optsContainer) optsContainer.style.display = 'block';
+    if (defaultTextGroup) defaultTextGroup.style.display = 'none';
   }
 };
-
-// Parse price differentials textarea into object
-function parsePriceDiffs(text) {
-  const diffs = {};
-  text.split('\n').forEach(line => {
-    const parts = line.split(':');
-    if (parts.length >= 2) {
-      const opt = parts[0].trim();
-      const price = parseFloat(parts[1].trim());
-      if (opt && !isNaN(price)) {
-        diffs[opt] = price;
-      }
-    }
-  });
-  return diffs;
-}
 
 window.saveCustomItemSection = function() {
   const sectionName = document.getElementById('aci-section-name').value.trim();
@@ -1429,15 +1494,27 @@ window.saveCustomItemSection = function() {
     if (!name) return;
 
     const type = row.querySelector('.aci-field-type').value;
-    const defaultVal = row.querySelector('.aci-field-default').value.trim();
+    const rowId = row.id;
     let options = [];
-    const optsText = row.querySelector('.aci-field-options') ? row.querySelector('.aci-field-options').value.trim() : '';
-    if (optsText && (type === 'dropdown' || type === 'radio')) {
-      options = optsText.split('\n').map(o => o.trim()).filter(o => o);
-    }
+    let priceDiffs = {};
+    let defaultVal = '';
 
-    const priceDiffsText = row.querySelector('.aci-field-prices') ? row.querySelector('.aci-field-prices').value.trim() : '';
-    const priceDiffs = parsePriceDiffs(priceDiffsText);
+    if (type === 'dropdown' || type === 'radio') {
+      const extracted = extractFieldOptionsAndPrices(row, rowId);
+      options = extracted.options;
+      priceDiffs = extracted.priceDiffs;
+      defaultVal = extracted.defaultVal;
+
+      if (options.length === 0) {
+        options = ['Standard', 'Custom'];
+        priceDiffs = { 'Standard': 0, 'Custom': 15000 };
+        defaultVal = 'Standard';
+      }
+    } else if (type === 'checkbox') {
+      defaultVal = 'Yes';
+    } else {
+      defaultVal = row.querySelector('.aci-field-default')?.value.trim() || 'Standard';
+    }
 
     section.fields.push({
       id: `cf_${section.id}_${idx}`,
@@ -1530,43 +1607,51 @@ window.openEditCustomItemSectionModal = function(id) {
   const container = document.getElementById('edit-custom-item-modal-body');
 
   let fieldsHtml = section.fields.map((field, idx) => {
-    const optionsVal = (field.options && field.options.length > 0) ? field.options.join('\n') : '';
-    const pricesVal = field.priceDiffs ? Object.entries(field.priceDiffs).map(([k, v]) => `${k}: ${v}`).join('\n') : '';
+    const rowId = `edit-field-${Date.now()}-${idx}`;
 
     return `
-      <div class="aci-field-row" data-field-idx="${idx}">
-        <div class="aci-field-row-header">
-          <span>Field #${idx + 1}</span>
-          <button type="button" onclick="removeEditFieldRow(this)" style="display:inline-flex;align-items:center;gap:4px;background:none;border:none;color:var(--color-danger);cursor:pointer;font-size:0.75rem;font-weight:600;padding:4px 8px;border-radius:4px;">
-            <svg style="width:12px;height:12px;" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-            Remove
+      <div class="aci-field-row" id="${rowId}" data-field-idx="${idx}" style="background:#F8FAFC; border:1px solid #CBD5E1; border-radius:8px; padding:16px; margin-bottom:16px;">
+        <div class="aci-field-row-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid #E2E8F0; padding-bottom:8px;">
+          <span style="font-weight:700; font-size:0.85rem; color:#1E293B;">Field #${idx + 1}</span>
+          <button type="button" onclick="removeEditFieldRow(this)" style="background:none; border:1px solid #FCA5A5; color:#EF4444; border-radius:4px; padding:4px 8px; font-size:0.75rem; cursor:pointer; font-weight:600;">
+            ✕ Remove Field
           </button>
         </div>
-        <div class="aci-field-grid">
-          <div class="form-group">
-            <label>Field Name</label>
-            <input type="text" class="form-control edit-field-name" value="${field.name}">
+
+        <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
+          <div>
+            <label style="font-size:0.75rem; font-weight:700; color:#334155; display:block; margin-bottom:4px;">Field Name *</label>
+            <input type="text" class="form-control form-control-sm edit-field-name" value="${field.name}" style="font-weight:600;">
           </div>
-          <div class="form-group">
-            <label>Field Type</label>
-            <select class="form-control edit-field-type" onchange="toggleEditFieldOptions(this)">
-              <option value="dropdown" ${field.type === 'dropdown' ? 'selected' : ''}>Dropdown (Select)</option>
-              <option value="radio" ${field.type === 'radio' ? 'selected' : ''}>Radio (Selectable)</option>
-              <option value="text" ${field.type === 'text' ? 'selected' : ''}>Text Input</option>
-              <option value="number" ${field.type === 'number' ? 'selected' : ''}>Number Input</option>
+          <div>
+            <label style="font-size:0.75rem; font-weight:700; color:#334155; display:block; margin-bottom:4px;">Control Type *</label>
+            <select class="form-control form-control-sm edit-field-type" onchange="toggleEditFieldOptions(this)">
+              <option value="dropdown" ${field.type === 'dropdown' ? 'selected' : ''}>Dropdown Select Menu</option>
+              <option value="radio" ${field.type === 'radio' ? 'selected' : ''}>Selectable Radio Buttons</option>
+              <option value="checkbox" ${field.type === 'checkbox' ? 'selected' : ''}>Checkbox (Yes/No)</option>
+              <option value="text" ${field.type === 'text' ? 'selected' : ''}>Text Input Field</option>
             </select>
           </div>
-          <div class="form-group edit-options-group" style="grid-column: span 2; ${field.type === 'text' || field.type === 'number' ? 'display:none;' : ''}">
-            <label>Options (one per line, for dropdown/radio only)</label>
-            <textarea class="form-control edit-field-options" rows="3">${optionsVal}</textarea>
+        </div>
+
+        <div class="aci-default-text-group" style="${field.type === 'text' || field.type === 'checkbox' ? '' : 'display:none;'} margin-bottom:12px;">
+          <label style="font-size:0.75rem; font-weight:700; color:#334155; display:block; margin-bottom:4px;">Default Value</label>
+          <input type="text" class="form-control form-control-sm edit-field-default" value="${field.defaultValue || ''}">
+        </div>
+
+        <div class="aci-options-builder-container" style="background:#F1F5F9; border:1px solid #CBD5E1; border-radius:8px; padding:12px; ${field.type === 'text' || field.type === 'checkbox' ? 'display:none;' : ''}">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <div>
+              <label style="font-size:0.775rem; font-weight:700; color:#1E293B;">Options & Price Differentials List</label>
+              <span class="section-hint" style="font-size:0.7rem; color:#64748B; display:block;">Enter choice names and their exact price addition (+) or discount (-).</span>
+            </div>
+            <button type="button" class="btn btn-outline btn-xs" onclick="addOptionChoiceRow('${rowId}')" style="background:#0284C7; color:#FFFFFF; border:none; font-weight:700; padding:4px 10px; border-radius:4px;">
+              + Add Option Row
+            </button>
           </div>
-          <div class="form-group">
-            <label>Default Value</label>
-            <input type="text" class="form-control edit-field-default" value="${field.defaultValue || ''}">
-          </div>
-          <div class="form-group">
-            <label>Price Differentials (format: Option: price)</label>
-            <textarea class="form-control edit-field-prices" rows="3">${pricesVal}</textarea>
+
+          <div class="aci-option-items-table" id="aci-opt-table-${rowId}">
+            <!-- Option Choice Rows Injected Here -->
           </div>
         </div>
       </div>
@@ -1590,6 +1675,20 @@ window.openEditCustomItemSectionModal = function(id) {
     </div>
   `;
 
+  // Pre-populate Option rows for existing fields
+  section.fields.forEach((field, idx) => {
+    const rowId = `edit-field-${Date.now()}-${idx}`;
+    if (field.options && field.options.length > 0) {
+      field.options.forEach(opt => {
+        const pDiff = field.priceDiffs && field.priceDiffs[opt] !== undefined ? field.priceDiffs[opt] : 0;
+        const isDef = field.defaultValue === opt;
+        addOptionChoiceRow(rowId, opt, pDiff, isDef);
+      });
+    } else if (field.type === 'dropdown' || field.type === 'radio') {
+      addOptionChoiceRow(rowId, 'Option 1', 0, true);
+    }
+  });
+
   document.getElementById('edit-custom-item-modal').classList.add('active');
 };
 
@@ -1606,54 +1705,70 @@ window.removeEditFieldRow = function(btn) {
 window.addEditFieldRow = function() {
   const container = document.getElementById('edit-fields-container');
   const idx = container.querySelectorAll('.aci-field-row').length;
+  const rowId = `edit-field-${Date.now()}-${idx}`;
+
   const html = `
-    <div class="aci-field-row">
-      <div class="aci-field-row-header">
-        <span>Field #${idx + 1}</span>
-        <button type="button" onclick="removeEditFieldRow(this)" style="display:inline-flex;align-items:center;gap:4px;background:none;border:none;color:var(--color-danger);cursor:pointer;font-size:0.75rem;font-weight:600;padding:4px 8px;border-radius:4px;">
-          <svg style="width:12px;height:12px;" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-          Remove
+    <div class="aci-field-row" id="${rowId}" style="background:#F8FAFC; border:1px solid #CBD5E1; border-radius:8px; padding:16px; margin-bottom:16px;">
+      <div class="aci-field-row-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; border-bottom:1px solid #E2E8F0; padding-bottom:8px;">
+        <span style="font-weight:700; font-size:0.85rem; color:#1E293B;">Field #${idx + 1}</span>
+        <button type="button" onclick="removeEditFieldRow(this)" style="background:none; border:1px solid #FCA5A5; color:#EF4444; border-radius:4px; padding:4px 8px; font-size:0.75rem; cursor:pointer; font-weight:600;">
+          ✕ Remove Field
         </button>
       </div>
-      <div class="aci-field-grid">
-        <div class="form-group">
-          <label>Field Name</label>
-          <input type="text" class="form-control edit-field-name" placeholder="e.g. Battery Type">
+
+      <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px; margin-bottom:12px;">
+        <div>
+          <label style="font-size:0.75rem; font-weight:700; color:#334155; display:block; margin-bottom:4px;">Field Name *</label>
+          <input type="text" class="form-control form-control-sm edit-field-name" placeholder="e.g. Battery Voltage" style="font-weight:600;">
         </div>
-        <div class="form-group">
-          <label>Field Type</label>
-          <select class="form-control edit-field-type" onchange="toggleEditFieldOptions(this)">
-            <option value="dropdown">Dropdown (Select)</option>
-            <option value="radio">Radio (Selectable)</option>
-            <option value="text">Text Input</option>
-            <option value="number">Number Input</option>
+        <div>
+          <label style="font-size:0.75rem; font-weight:700; color:#334155; display:block; margin-bottom:4px;">Control Type *</label>
+          <select class="form-control form-control-sm edit-field-type" onchange="toggleEditFieldOptions(this)">
+            <option value="dropdown">Dropdown Select Menu</option>
+            <option value="radio">Selectable Radio Buttons</option>
+            <option value="checkbox">Checkbox (Yes/No)</option>
+            <option value="text">Text Input Field</option>
           </select>
         </div>
-        <div class="form-group edit-options-group" style="grid-column: span 2;">
-          <label>Options (one per line)</label>
-          <textarea class="form-control edit-field-options" rows="3" placeholder="Option 1&#10;Option 2"></textarea>
+      </div>
+
+      <div class="aci-default-text-group" style="display:none; margin-bottom:12px;">
+        <label style="font-size:0.75rem; font-weight:700; color:#334155; display:block; margin-bottom:4px;">Default Value</label>
+        <input type="text" class="form-control form-control-sm edit-field-default" placeholder="e.g. Standard">
+      </div>
+
+      <div class="aci-options-builder-container" style="background:#F1F5F9; border:1px solid #CBD5E1; border-radius:8px; padding:12px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+          <div>
+            <label style="font-size:0.775rem; font-weight:700; color:#1E293B;">Options & Price Differentials List</label>
+            <span class="section-hint" style="font-size:0.7rem; color:#64748B; display:block;">Enter choice names and their exact price addition (+) or discount (-).</span>
+          </div>
+          <button type="button" class="btn btn-outline btn-xs" onclick="addOptionChoiceRow('${rowId}')" style="background:#0284C7; color:#FFFFFF; border:none; font-weight:700; padding:4px 10px; border-radius:4px;">
+            + Add Option Row
+          </button>
         </div>
-        <div class="form-group">
-          <label>Default Value</label>
-          <input type="text" class="form-control edit-field-default" placeholder="e.g. Standard">
-        </div>
-        <div class="form-group">
-          <label>Price Differentials (format: Option: price)</label>
-          <textarea class="form-control edit-field-prices" rows="3" placeholder="Option 1: 0&#10;Option 2: 5000"></textarea>
+
+        <div class="aci-option-items-table" id="aci-opt-table-${rowId}">
+          <!-- Option Choice Rows Injected Here -->
         </div>
       </div>
     </div>
   `;
   container.insertAdjacentHTML('beforeend', html);
+  addOptionChoiceRow(rowId, 'Option 1', 0, true);
 };
 
 window.toggleEditFieldOptions = function(select) {
   const row = select.closest('.aci-field-row');
-  const optsGroup = row.querySelector('.edit-options-group');
-  if (select.value === 'text' || select.value === 'number') {
-    optsGroup.style.display = 'none';
+  const optsContainer = row.querySelector('.aci-options-builder-container');
+  const defaultTextGroup = row.querySelector('.aci-default-text-group');
+
+  if (select.value === 'text' || select.value === 'checkbox') {
+    if (optsContainer) optsContainer.style.display = 'none';
+    if (defaultTextGroup) defaultTextGroup.style.display = 'block';
   } else {
-    optsGroup.style.display = 'block';
+    if (optsContainer) optsContainer.style.display = 'block';
+    if (defaultTextGroup) defaultTextGroup.style.display = 'none';
   }
 };
 
@@ -1676,14 +1791,27 @@ window.saveEditedCustomItemSection = function() {
     const name = row.querySelector('.edit-field-name').value.trim();
     if (!name) return;
     const type = row.querySelector('.edit-field-type').value;
-    const defaultVal = row.querySelector('.edit-field-default').value.trim();
+    const rowId = row.id;
     let options = [];
-    const optsEl = row.querySelector('.edit-field-options');
-    if (optsEl && (type === 'dropdown' || type === 'radio')) {
-      options = optsEl.value.split('\n').map(o => o.trim()).filter(o => o);
+    let priceDiffs = {};
+    let defaultVal = '';
+
+    if (type === 'dropdown' || type === 'radio') {
+      const extracted = extractFieldOptionsAndPrices(row, rowId);
+      options = extracted.options;
+      priceDiffs = extracted.priceDiffs;
+      defaultVal = extracted.defaultVal;
+
+      if (options.length === 0) {
+        options = ['Standard', 'Custom'];
+        priceDiffs = { 'Standard': 0, 'Custom': 15000 };
+        defaultVal = 'Standard';
+      }
+    } else if (type === 'checkbox') {
+      defaultVal = 'Yes';
+    } else {
+      defaultVal = row.querySelector('.edit-field-default')?.value.trim() || 'Standard';
     }
-    const pricesVal = row.querySelector('.edit-field-prices') ? row.querySelector('.edit-field-prices').value.trim() : '';
-    const priceDiffs = parsePriceDiffs(pricesVal);
 
     section.fields.push({
       id: `cf_${_editSectionId}_${idx}`,
@@ -1702,7 +1830,7 @@ window.saveEditedCustomItemSection = function() {
   renderCustomSectionsList();
   renderConfiguratorFormInputs(WIZARD_PRODUCT_TEMPLATES[wizardState.subtype]);
   calculateWizardPricing();
-  logSystemActivity(`Updated custom spec section: "${sectionName}".`);
+  logSystemActivity(`Edited custom spec section: "${sectionName}".`);
   alert(`Custom section "${sectionName}" updated successfully!`);
 };
 
