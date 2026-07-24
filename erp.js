@@ -788,6 +788,9 @@ function renderConfiguratorFormInputs(template) {
         ...customOpts.map(c => c.name)
       ];
       const selectedVal = wizardState.specs[spec.id] || spec.defaultValue;
+      if (wizardState.specs[spec.id] === undefined) {
+        wizardState.specs[spec.id] = selectedVal;
+      }
 
       if (spec.type === 'dropdown') {
         controlHtml = `
@@ -897,6 +900,9 @@ function renderCustomItemSpecControls() {
 
     const fieldsHtml = section.fields.map(field => {
       const selectedVal = wizardState.specs[field.id] || field.defaultValue || '';
+      if (wizardState.specs[field.id] === undefined && field.defaultValue) {
+        wizardState.specs[field.id] = field.defaultValue;
+      }
       const isNr = !!wizardState.notRequired[field.id];
       const nrBadgeHtml = `<span class="nr-badge${isNr ? ' active' : ''}" id="nr-badge-${field.id}" onclick="toggleFieldRequired('${field.id}')">${isNr ? 'Not Required' : 'Required'}</span>`;
       let controlHtml = '';
@@ -1971,14 +1977,12 @@ function calculateWizardPricing() {
       }
 
       upgradesTotal += diff;
-      if (diff !== 0) {
-        upgradesHtml += `
-          <div class="preview-row indent">
-            <span>+ Upgrade: ${label} (${selectedVal})</span>
-            <span>${diff > 0 ? '+' : ''}₹${diff.toLocaleString('en-IN')}</span>
-          </div>
-        `;
-      }
+      upgradesHtml += `
+        <div class="preview-row indent">
+          <span>+ Upgrade: ${label} (${selectedVal})</span>
+          <span>${diff > 0 ? '+' : ''}₹${diff.toLocaleString('en-IN')}</span>
+        </div>
+      `;
     }
   });
 
@@ -2001,14 +2005,12 @@ function calculateWizardPricing() {
         }
 
         upgradesTotal += diff;
-        if (diff !== 0) {
-          upgradesHtml += `
-            <div class="preview-row indent">
-              <span>+ [${section.name}] ${label} (${selectedVal})</span>
-              <span>${diff > 0 ? '+' : ''}₹${diff.toLocaleString('en-IN')}</span>
-            </div>
-          `;
-        }
+        upgradesHtml += `
+          <div class="preview-row indent">
+            <span>+ [${section.name}] ${label} (${selectedVal})</span>
+            <span>${diff > 0 ? '+' : ''}₹${diff.toLocaleString('en-IN')}</span>
+          </div>
+        `;
       }
     });
   });
