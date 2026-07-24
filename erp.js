@@ -727,6 +727,13 @@ function loadDefaultSpecsForSubtype(subtypeKey) {
 
 function getEffectiveSpecPriceDiff(spec, opt) {
   if (!spec || !opt) return 0;
+
+  const customOpts = STATE.adminPricing?.customFieldOptions?.[spec.id];
+  if (customOpts) {
+    const match = customOpts.find(c => c.name === opt);
+    if (match) return match.priceDiff;
+  }
+
   let diff = (spec.priceDiffs && spec.priceDiffs[opt] !== undefined) ? spec.priceDiffs[opt] : 0;
 
   if (spec.id === 'floor' && opt.includes('6mm') && STATE.adminPricing && STATE.adminPricing.floor6 !== undefined) diff = STATE.adminPricing.floor6;
@@ -755,33 +762,66 @@ function renderConfiguratorFormInputs(template) {
 
     container.innerHTML = secSpecs.map(spec => {
       const isNr = !!wizardState.notRequired[spec.id];
-      const nrBadgeHtml = `<span class="nr-badge${isNr ? ' active' : ''}" id="nr-badge-${spec.id}" onclick="toggleFieldRequired('${spec.id}')">${isNr ? 'Not Required' : 'Required'}</span>`;
+      const nrBadgeHtml = `<span class="nr-badge${isNr ? ' active' : ''}" id="nr-badge-${spec.id}" onclick="toggleFieldRequired('${spec.id}")">${isNr ? 'Not Required' : 'Required'}</span>`;
       let controlHtml = '';
+
+      const hasCustom = spec.options && spec.options.some(o => o.toLowerCase() === 'custom');
+      const customOpts = (STATE.adminPricing?.customFieldOptions?.[spec.id]) || [];
+      const curCustomDesc = wizardState.specs[spec.id + '_custom_desc'] || '';
+      const curCustomPrice = wizardState.specs[spec.id + '_custom_price'] || '';
+      const customDetailsHtml = hasCustom ? `
+        <div id="custom-details-${spec.id}" class="custom-details-wrap" style="display:${wizardState.specs[spec.id] === 'Custom' ? 'flex' : 'none'}; gap:8px; margin-top:8px;">
+          <input type="text" id="w-spec-${spec.id}-custom-desc" class="form-control form-control-sm" placeholder="Describe the custom specification..." value="${curCustomDesc}" style="flex:1;" oninput="updateSpecCustomDesc('${spec.id}', this.value)">
+          <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+            <span style="font-size:0.75rem;color:var(--color-text-muted);">₹</span>
+            <input type="number" id="w-spec-${spec.id}-custom-price" class="form-control form-control-sm" placeholder="Price" value="${curCustomPrice}" style="width:100px;text-align:right;font-weight:700;" oninput="updateSpecCustomPrice('${spec.id}', this.value)">
+          </div>
+          <button type="button" onclick="addCustomFieldOption('${spec.id}', '${spec.name}')" style="flex-shrink:0;padding:4px 14px;font-size:0.7rem;font-weight:700;border-radius:4px;border:none;background:#059669;color:white;cursor:pointer;">
+            + Add Option
+          </button>
+        </div>
+      ` : '';
+
+      // Build options list: exclude original "Custom" entry, include saved custom options
+      const allOpts = [
+        ...spec.options.filter(o => o.toLowerCase() !== 'custom'),
+        ...customOpts.map(c => c.name)
+      ];
+      const selectedVal = wizardState.specs[spec.id] || spec.defaultValue;
 
       if (spec.type === 'dropdown') {
         controlHtml = `
-          <select id="w-spec-${spec.id}" class="form-control" onchange="updateSpecValueState('${spec.id}', this.value)" ${isNr ? 'disabled' : ''}>
-            ${spec.options.map(opt => {
+          <select id="w-spec-${spec.id}" class="form-control" onchange="onSpecChange('${spec.id}', this.value)" ${isNr ? 'disabled' : ''}>
+            ${allOpts.map(opt => {
               const diff = getEffectiveSpecPriceDiff(spec, opt);
-              return `<option value="${opt}" ${opt === spec.defaultValue ? 'selected' : ''}>
-                ${opt} ${diff !== 0 ? `(${diff > 0 ? '+' : ''}₹${diff.toLocaleString('en-IN')})` : '(Included)'}
+              return `<option value="${opt}" ${opt === selectedVal ? 'selected' : ''}>
+                ${opt} ${diff !== 0 ? `(${diff > 0 ? '+' : ''}₹${diff.toLocaleString('en-IN')})` : diff === 0 ? '' : '(Included)'}
               </option>`;
             }).join('')}
+            ${hasCustom ? `<option value="Custom" ${selectedVal === 'Custom' ? 'selected' : ''}>Custom</option>` : ''}
           </select>
+          ${customDetailsHtml}
         `;
       } else if (spec.type === 'radio') {
         controlHtml = `
           <div class="radio-group">
-            ${spec.options.map((opt, i) => {
+            ${allOpts.map((opt, i) => {
               const diff = getEffectiveSpecPriceDiff(spec, opt);
               return `
                 <label class="radio-label">
-                  <input type="radio" name="w-spec-radio-${spec.id}" value="${opt}" ${opt === spec.defaultValue ? 'checked' : ''} onchange="updateSpecValueState('${spec.id}', this.value)" ${isNr ? 'disabled' : ''}>
+                  <input type="radio" name="w-spec-radio-${spec.id}" value="${opt}" ${opt === selectedVal ? 'checked' : ''} onchange="onSpecChange('${spec.id}', this.value)" ${isNr ? 'disabled' : ''}>
                   ${opt} ${diff !== 0 ? `<span style="font-size:0.75rem;color:var(--color-text-muted);">(${diff > 0 ? '+' : ''}₹${diff.toLocaleString('en-IN')})</span>` : ''}
                 </label>
               `;
             }).join('')}
+            ${hasCustom ? `
+              <label class="radio-label">
+                <input type="radio" name="w-spec-radio-${spec.id}" value="Custom" ${selectedVal === 'Custom' ? 'checked' : ''} onchange="onSpecChange('${spec.id}', this.value)" ${isNr ? 'disabled' : ''}>
+                Custom
+              </label>
+            ` : ''}
           </div>
+          ${customDetailsHtml}
         `;
       } else if (spec.type === 'checkbox') {
         controlHtml = `
@@ -861,32 +901,61 @@ function renderCustomItemSpecControls() {
       const nrBadgeHtml = `<span class="nr-badge${isNr ? ' active' : ''}" id="nr-badge-${field.id}" onclick="toggleFieldRequired('${field.id}')">${isNr ? 'Not Required' : 'Required'}</span>`;
       let controlHtml = '';
 
+      const hasCustom = field.options && field.options.some(o => o.toLowerCase() === 'custom');
+      const customOpts = (STATE.adminPricing?.customFieldOptions?.[field.id]) || [];
+      const curCustomDesc = wizardState.specs[field.id + '_custom_desc'] || '';
+      const curCustomPrice = wizardState.specs[field.id + '_custom_price'] || '';
+      const customDetailsHtml = hasCustom ? `
+        <div id="custom-details-${field.id}" class="custom-details-wrap" style="display:${wizardState.specs[field.id] === 'Custom' ? 'flex' : 'none'}; gap:8px; margin-top:8px;">
+          <input type="text" id="w-spec-${field.id}-custom-desc" class="form-control form-control-sm" placeholder="Describe the custom specification..." value="${curCustomDesc}" style="flex:1;" oninput="updateSpecCustomDesc('${field.id}', this.value)">
+          <div style="display:flex;align-items:center;gap:4px;flex-shrink:0;">
+            <span style="font-size:0.75rem;color:var(--color-text-muted);">₹</span>
+            <input type="number" id="w-spec-${field.id}-custom-price" class="form-control form-control-sm" placeholder="Price" value="${curCustomPrice}" style="width:100px;text-align:right;font-weight:700;" oninput="updateSpecCustomPrice('${field.id}', this.value)">
+          </div>
+          <button type="button" onclick="addCustomFieldOption('${field.id}', '${field.name}')" style="flex-shrink:0;padding:4px 14px;font-size:0.7rem;font-weight:700;border-radius:4px;border:none;background:#059669;color:white;cursor:pointer;">
+            + Add Option
+          </button>
+        </div>
+      ` : '';
+
+      const allOpts = [
+        ...(field.options || []).filter(o => o.toLowerCase() !== 'custom'),
+        ...customOpts.map(c => c.name)
+      ];
+
       if (field.type === 'dropdown') {
-        const opts = field.options && field.options.length > 0 ? field.options : [selectedVal || 'N/A'];
         controlHtml = `
-          <select id="w-spec-${field.id}" class="form-control" onchange="updateSpecValueState('${field.id}', this.value)" ${isNr ? 'disabled' : ''}>
-            ${opts.map(opt => {
-              const diff = (field.priceDiffs && field.priceDiffs[opt] !== undefined) ? field.priceDiffs[opt] : 0;
+          <select id="w-spec-${field.id}" class="form-control" onchange="onSpecChange('${field.id}', this.value)" ${isNr ? 'disabled' : ''}>
+            ${allOpts.map(opt => {
+              const diff = (field.priceDiffs && field.priceDiffs[opt] !== undefined) ? field.priceDiffs[opt] : (getCustomOptPriceDiff(field.id, opt) || 0);
               return `<option value="${opt}" ${opt === selectedVal ? 'selected' : ''}>
                 ${opt} ${diff !== 0 ? `(${diff > 0 ? '+' : ''}₹${diff.toLocaleString('en-IN')})` : ''}
               </option>`;
             }).join('')}
+            ${hasCustom ? `<option value="Custom" ${selectedVal === 'Custom' ? 'selected' : ''}>Custom</option>` : ''}
           </select>
+          ${customDetailsHtml}
         `;
       } else if (field.type === 'radio') {
-        const opts = field.options && field.options.length > 0 ? field.options : [selectedVal || 'N/A'];
         controlHtml = `
           <div class="radio-group">
-            ${opts.map((opt, i) => {
-              const diff = (field.priceDiffs && field.priceDiffs[opt] !== undefined) ? field.priceDiffs[opt] : 0;
+            ${allOpts.map((opt, i) => {
+              const diff = (field.priceDiffs && field.priceDiffs[opt] !== undefined) ? field.priceDiffs[opt] : (getCustomOptPriceDiff(field.id, opt) || 0);
               return `
                 <label class="radio-label">
-                  <input type="radio" name="w-spec-radio-${field.id}" value="${opt}" ${opt === selectedVal ? 'checked' : ''} onchange="updateSpecValueState('${field.id}', this.value)" ${isNr ? 'disabled' : ''}>
+                  <input type="radio" name="w-spec-radio-${field.id}" value="${opt}" ${opt === selectedVal ? 'checked' : ''} onchange="onSpecChange('${field.id}', this.value)" ${isNr ? 'disabled' : ''}>
                   ${opt} ${diff !== 0 ? `<span style="font-size:0.75rem;color:var(--color-text-muted);">(${diff > 0 ? '+' : ''}₹${diff.toLocaleString('en-IN')})</span>` : ''}
                 </label>
               `;
             }).join('')}
+            ${hasCustom ? `
+              <label class="radio-label">
+                <input type="radio" name="w-spec-radio-${field.id}" value="Custom" ${selectedVal === 'Custom' ? 'checked' : ''} onchange="onSpecChange('${field.id}', this.value)" ${isNr ? 'disabled' : ''}>
+                Custom
+              </label>
+            ` : ''}
           </div>
+          ${customDetailsHtml}
         `;
       } else if (field.type === 'number') {
         controlHtml = `
@@ -943,6 +1012,149 @@ window.updateSpecValueState = function(specId, val) {
   wizardState.specs[specId] = val;
   calculateWizardPricing();
   simulateDraftAutoSave();
+};
+
+window.onSpecChange = function(specId, val) {
+  updateSpecValueState(specId, val);
+  const details = document.getElementById(`custom-details-${specId}`);
+  if (details) {
+    details.style.display = val === 'Custom' ? 'flex' : 'none';
+  }
+};
+
+window.updateSpecCustomDesc = function(specId, val) {
+  wizardState.specs[specId + '_custom_desc'] = val;
+  calculateWizardPricing();
+  simulateDraftAutoSave();
+};
+
+window.updateSpecCustomPrice = function(specId, val) {
+  wizardState.specs[specId + '_custom_price'] = parseFloat(val) || 0;
+  calculateWizardPricing();
+  simulateDraftAutoSave();
+};
+
+function getCustomOptPriceDiff(specId, optName) {
+  const opts = STATE.adminPricing?.customFieldOptions?.[specId];
+  if (!opts) return 0;
+  const match = opts.find(c => c.name === optName);
+  return match ? match.priceDiff : 0;
+}
+
+window.addCustomFieldOption = function(specId, specName) {
+  loadState();
+  if (!STATE.adminPricing) STATE.adminPricing = {};
+  if (!STATE.adminPricing.customFieldOptions) STATE.adminPricing.customFieldOptions = {};
+  if (!STATE.adminPricing.customFieldOptions[specId]) STATE.adminPricing.customFieldOptions[specId] = [];
+
+  const desc = document.getElementById(`w-spec-${specId}-custom-desc`)?.value?.trim();
+  const price = parseFloat(document.getElementById(`w-spec-${specId}-custom-price`)?.value) || 0;
+
+  if (!desc) { alert('Please enter a description for the custom option.'); return; }
+
+  const existing = STATE.adminPricing.customFieldOptions[specId].find(c => c.name === desc);
+  if (existing) {
+    existing.priceDiff = price;
+  } else {
+    STATE.adminPricing.customFieldOptions[specId].push({ name: desc, priceDiff: price });
+  }
+
+  document.getElementById(`w-spec-${specId}-custom-desc`).value = '';
+  document.getElementById(`w-spec-${specId}-custom-price`).value = '';
+  wizardState.specs[specId] = desc;
+  delete wizardState.specs[specId + '_custom_desc'];
+  delete wizardState.specs[specId + '_custom_price'];
+
+  saveState();
+  renderConfiguratorFormInputs(WIZARD_PRODUCT_TEMPLATES[wizardState.subtype]);
+  calculateWizardPricing();
+  simulateDraftAutoSave();
+};
+
+window.deleteCustomFieldOption = function(specId, optName) {
+  if (!confirm(`Delete custom option "${optName}"?`)) return;
+  loadState();
+  const opts = STATE.adminPricing?.customFieldOptions?.[specId];
+  if (!opts) return;
+  const idx = opts.findIndex(c => c.name === optName);
+  if (idx !== -1) {
+    opts.splice(idx, 1);
+    if (wizardState.specs[specId] === optName) {
+      wizardState.specs[specId] = '';
+    }
+    saveState();
+    renderConfiguratorFormInputs(WIZARD_PRODUCT_TEMPLATES[wizardState.subtype]);
+    calculateWizardPricing();
+    // Refresh whichever modal is open
+    if (document.getElementById('custom-items-manager-modal')?.classList.contains('active')) {
+      openCustomItemsManagerModal();
+    } else {
+      window.openPartPricingMatrixModal();
+    }
+  }
+};
+
+window.openCustomItemsManagerModal = function() {
+  loadState();
+  const opts = STATE.adminPricing?.customFieldOptions || {};
+  const template = WIZARD_PRODUCT_TEMPLATES[wizardState.subtype];
+  const container = document.getElementById('custom-items-manager-body');
+  if (!container) return;
+
+  const allSpecs = template ? template.specs : [];
+  const customSections = getCustomItemSpecs();
+
+  // Build specId → name lookup
+  const specNames = {};
+  allSpecs.forEach(s => { specNames[s.id] = s.name; });
+  customSections.forEach(sec => {
+    sec.fields.forEach(f => { specNames[f.id] = `[${sec.name}] ${f.name}`; });
+  });
+
+  const keys = Object.keys(opts);
+  let totalCount = 0;
+  keys.forEach(k => { totalCount += opts[k].length; });
+
+  if (totalCount === 0) {
+    container.innerHTML = `
+      <div style="padding:40px; text-align:center;">
+        <p style="font-size:0.9rem; color:#64748B; margin-bottom:8px;">No custom items have been added yet.</p>
+        <p style="font-size:0.75rem; color:#94A3B8;">Select "Custom" in any spec field, fill in a description and price, then click "+ Add Option".</p>
+      </div>
+    `;
+  } else {
+    let html = '<div style="display:flex; flex-direction:column; gap:12px;">';
+    keys.forEach(specId => {
+      const items = opts[specId];
+      if (!items || items.length === 0) return;
+      const label = specNames[specId] || specId;
+      html += `
+        <div style="background:#F8FAFC; border:1px solid #E2E8F0; border-radius:8px; overflow:hidden;">
+          <div style="background:#F1F5F9; padding:8px 14px; font-size:0.75rem; font-weight:700; color:#475569; text-transform:uppercase; border-bottom:1px solid #E2E8F0;">${label}</div>
+          <div style="padding:8px 14px;">
+      `;
+      items.forEach(item => {
+        html += `
+          <div style="display:flex; align-items:center; justify-content:space-between; padding:6px 0; border-bottom:1px solid #F1F5F9;">
+            <div style="display:flex; align-items:center; gap:8px;">
+              <span style="font-weight:600; font-size:0.85rem; color:#334155;">${item.name}</span>
+              <span style="font-size:0.75rem; font-weight:700; color:#059669;">${item.priceDiff > 0 ? '+' : ''}₹${(item.priceDiff || 0).toLocaleString('en-IN')}</span>
+            </div>
+            <button type="button" onclick="deleteCustomFieldOption('${specId}', '${item.name}')" style="background:none;border:none;color:#DC2626;cursor:pointer;font-size:0.7rem;font-weight:700;padding:4px 10px;border-radius:4px;">✕ Delete</button>
+          </div>
+        `;
+      });
+      html += `</div></div>`;
+    });
+    html += '</div>';
+    container.innerHTML = html;
+  }
+
+  document.getElementById('custom-items-manager-modal').classList.add('active');
+};
+
+window.closeCustomItemsManagerModal = function() {
+  document.getElementById('custom-items-manager-modal').classList.remove('active');
 };
 
 window.toggleFieldRequired = function(specId) {
@@ -1275,7 +1487,6 @@ window.deleteCustomItemSection = function(id) {
   if (idx !== -1) {
     const section = STATE.customItemDefinitions[idx];
     const name = section.name;
-    // Clean up wizardState specs for deleted section's fields
     section.fields.forEach(field => {
       delete wizardState.specs[field.id];
     });
@@ -1603,6 +1814,26 @@ window.openPartPricingMatrixModal = function() {
         `;
       });
 
+      // Show custom options in pricing matrix with delete
+      const customOpts = STATE.adminPricing?.customFieldOptions?.[spec.id] || [];
+      customOpts.forEach(opt => {
+        html += `
+          <div class="part-price-item-card" data-option-name="${opt.name.toLowerCase()}" style="display:flex; align-items:center; justify-content:space-between; background:#F0FDF4; padding:6px 10px; border-radius:6px; border:1px solid #BBF7D0;">
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="font-size:0.775rem; font-weight:600; color:#166534;">${opt.name}</span>
+              <span style="font-size:0.6rem; font-weight:600; color:#15803D; background:#DCFCE7; padding:1px 6px; border-radius:3px;">custom</span>
+            </div>
+            <div style="display:flex; align-items:center; gap:6px;">
+              <span style="font-size:0.75rem; color:#64748B;">₹</span>
+              <input type="number" class="form-control form-control-sm part-price-diff-input" data-spec-id="${spec.id}" data-option="${opt.name}" value="${opt.priceDiff}" style="width:105px; text-align:right; font-weight:bold; padding:2px 6px;">
+              <button type="button" onclick="deleteCustomFieldOption('${spec.id}', '${opt.name}')" style="background:none;border:none;color:#DC2626;cursor:pointer;padding:2px;" title="Delete custom option">
+                <svg style="width:14px;height:14px;" viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+          </div>
+        `;
+      });
+
       html += `</div></div>`;
     }
   });
@@ -1674,6 +1905,13 @@ window.saveComponentPartPricingFromModal = function() {
       if (specId === 'axles' && option.includes('2x13T')) STATE.adminPricing.axle2 = val;
       if (specId === 'axles' && option.includes('3x16T')) STATE.adminPricing.axle3_16 = val;
     }
+
+    // Also save custom option prices
+    const customOpts = STATE.adminPricing?.customFieldOptions?.[specId];
+    if (customOpts) {
+      const match = customOpts.find(c => c.name === option);
+      if (match) match.priceDiff = val;
+    }
   });
 
   saveState();
@@ -1703,12 +1941,21 @@ function calculateWizardPricing() {
     const selectedVal = wizardState.specs[spec.id];
     if (selectedVal) {
       let diff = getEffectiveSpecPriceDiff(spec, selectedVal);
+      let label = spec.name;
+
+      // If Custom is selected, use custom description and price if provided
+      if (selectedVal.toLowerCase() === 'custom') {
+        const customDesc = wizardState.specs[spec.id + '_custom_desc'];
+        const customPrice = wizardState.specs[spec.id + '_custom_price'];
+        if (customDesc) label += ` (${customDesc})`;
+        if (customPrice) diff = customPrice;
+      }
 
       upgradesTotal += diff;
       if (diff !== 0) {
         upgradesHtml += `
           <div class="preview-row indent">
-            <span>+ Upgrade: ${spec.name} (${selectedVal})</span>
+            <span>+ Upgrade: ${label} (${selectedVal})</span>
             <span>${diff > 0 ? '+' : ''}₹${diff.toLocaleString('en-IN')}</span>
           </div>
         `;
@@ -1723,12 +1970,22 @@ function calculateWizardPricing() {
       if (wizardState.notRequired[field.id]) return;
       const selectedVal = wizardState.specs[field.id];
       if (selectedVal && field.priceDiffs && field.priceDiffs[selectedVal] !== undefined) {
-        const diff = field.priceDiffs[selectedVal];
+        let diff = field.priceDiffs[selectedVal];
+        let label = field.name;
+
+        // If Custom is selected, use custom description and price if provided
+        if (selectedVal.toLowerCase() === 'custom') {
+          const customDesc = wizardState.specs[field.id + '_custom_desc'];
+          const customPrice = wizardState.specs[field.id + '_custom_price'];
+          if (customDesc) label += ` (${customDesc})`;
+          if (customPrice) diff = customPrice;
+        }
+
         upgradesTotal += diff;
         if (diff !== 0) {
           upgradesHtml += `
             <div class="preview-row indent">
-              <span>+ [${section.name}] ${field.name} (${selectedVal})</span>
+              <span>+ [${section.name}] ${label} (${selectedVal})</span>
               <span>${diff > 0 ? '+' : ''}₹${diff.toLocaleString('en-IN')}</span>
             </div>
           `;
@@ -1854,12 +2111,18 @@ function generateQuotationFinalReview() {
   // Populate spec list elements dynamically (built-in specs)
   Object.keys(wizardState.specs).forEach(key => {
     if (wizardState.notRequired[key]) return;
+    if (key.endsWith('_custom_desc') || key.endsWith('_custom_price')) return;
     const specInfo = template.specs.find(s => s.id === key);
     if (specInfo) {
+      let val = wizardState.specs[key];
+      if (val.toLowerCase() === 'custom') {
+        const desc = wizardState.specs[key + '_custom_desc'];
+        if (desc) val += ` - ${desc}`;
+      }
       specsListHtml += `
         <div class="pdf-specs-item">
           <span style="font-weight:bold; min-width: 26px;">${count++}.</span>
-          <span>${specInfo.name} = ${wizardState.specs[key]}</span>
+          <span>${specInfo.name} = ${val}</span>
         </div>
       `;
     }
@@ -1872,10 +2135,15 @@ function generateQuotationFinalReview() {
       if (wizardState.notRequired[field.id]) return;
       const val = wizardState.specs[field.id];
       if (val) {
+        let displayVal = val;
+        if (val.toLowerCase() === 'custom') {
+          const desc = wizardState.specs[field.id + '_custom_desc'];
+          if (desc) displayVal += ` - ${desc}`;
+        }
         specsListHtml += `
           <div class="pdf-specs-item">
             <span style="font-weight:bold; min-width: 26px;">${count++}.</span>
-            <span>[${section.name}] ${field.name} = ${val}</span>
+            <span>[${section.name}] ${field.name} = ${displayVal}</span>
           </div>
         `;
       }
@@ -1994,9 +2262,15 @@ window.convertWizardToWorkOrder = function() {
   const specDetails = [];
   Object.keys(wizardState.specs).forEach(key => {
     if (wizardState.notRequired[key]) return;
+    if (key.endsWith('_custom_desc') || key.endsWith('_custom_price')) return;
     const specInfo = template.specs.find(s => s.id === key);
     if (specInfo) {
-      specDetails.push(`${specInfo.name}: ${wizardState.specs[key]}`);
+      let val = wizardState.specs[key];
+      if (val.toLowerCase() === 'custom') {
+        const desc = wizardState.specs[key + '_custom_desc'];
+        if (desc) val += ` - ${desc}`;
+      }
+      specDetails.push(`${specInfo.name}: ${val}`);
     }
   });
 
@@ -2007,7 +2281,12 @@ window.convertWizardToWorkOrder = function() {
       if (wizardState.notRequired[field.id]) return;
       const val = wizardState.specs[field.id];
       if (val) {
-        specDetails.push(`[${section.name}] ${field.name}: ${val}`);
+        let displayVal = val;
+        if (val.toLowerCase() === 'custom') {
+          const desc = wizardState.specs[field.id + '_custom_desc'];
+          if (desc) displayVal += ` - ${desc}`;
+        }
+        specDetails.push(`[${section.name}] ${field.name}: ${displayVal}`);
       }
     });
   });

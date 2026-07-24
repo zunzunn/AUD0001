@@ -3267,6 +3267,18 @@ body.admin-logged-in .hero-section {
   padding: 2px 8px;
 }
 
+/* Custom details input when "Custom" is selected */
+.custom-details-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: #FFFBEB;
+  border: 1px solid #FDE68A;
+  border-radius: 6px;
+}
+
 /* Autosave indicator */
 .autosave-indicator {
   font-size: 0.725rem;
