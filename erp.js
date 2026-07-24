@@ -35,7 +35,6 @@ let wizardState = {
   capacity: '',
   specs: {},
   notRequired: {},
-  customMods: [],
   status: 'Draft',
   total: 0
 };
@@ -463,7 +462,6 @@ function startNewQuotationWizard() {
     subtype: '',
     capacity: '',
     specs: {},
-    customMods: [],
     status: 'Draft',
     total: 0
   };
@@ -492,9 +490,6 @@ function startNewQuotationWizard() {
   document.querySelectorAll('.capacity-btn').forEach(b => b.classList.remove('selected'));
   document.getElementById('capacity-custom-input-wrap').style.display = 'none';
   document.getElementById('w-custom-capacity-val').value = '';
-
-  // Clean Custom modifications list
-  document.getElementById('w-custom-mods-list').innerHTML = '';
 
   jumpToWizardStep(1);
 }
@@ -563,6 +558,8 @@ window.jumpToWizardStep = function(stepNum) {
     if (template) {
       renderCustomItemSpecControls();
     }
+    calculateWizardPricing();
+    simulateDraftAutoSave();
   }
 
   // Compile final sheet if step 5
@@ -827,17 +824,24 @@ function renderConfiguratorFormInputs(template) {
           ${customDetailsHtml}
         `;
       } else if (spec.type === 'checkbox') {
+        const checkboxOpts = Object.keys(spec.priceDiffs || {});
         controlHtml = `
           <div class="checkbox-group">
-            <label class="checkbox-label">
-              <input type="checkbox" id="w-spec-${spec.id}" ${spec.defaultValue === 'Yes' ? 'checked' : ''} onchange="updateSpecValueState('${spec.id}', this.checked ? 'Yes' : 'No')" ${isNr ? 'disabled' : ''}>
-              Fitted in Standard Assembly
-            </label>
+            ${checkboxOpts.map(opt => {
+              const isChecked = selectedVal === opt;
+              const pd = spec.priceDiffs ? spec.priceDiffs[opt] : 0;
+              return `
+                <label class="checkbox-label">
+                  <input type="radio" name="w-spec-radio-${spec.id}" value="${opt}" ${isChecked ? 'checked' : ''} onchange="onSpecChange('${spec.id}', this.value)" ${isNr ? 'disabled' : ''}>
+                  ${opt} ${pd !== 0 ? `<span style="font-size:0.75rem;color:var(--color-text-muted);">(${pd > 0 ? '+' : ''}₹${pd.toLocaleString('en-IN')})</span>` : ''}
+                </label>
+              `;
+            }).join('')}
           </div>
         `;
       } else if (spec.type === 'text') {
         controlHtml = `
-          <input type="text" id="w-spec-${spec.id}" class="form-control" value="${spec.defaultValue}" oninput="updateSpecValueState('${spec.id}', this.value)" ${isNr ? 'disabled' : ''}>
+          <input type="text" id="w-spec-${spec.id}" class="form-control" value="${selectedVal}" oninput="updateSpecValueState('${spec.id}', this.value)" ${isNr ? 'disabled' : ''}>
         `;
       }
 
@@ -1290,50 +1294,6 @@ function updateSectionNrBadgeFromFields(specId) {
     secBadge.textContent = allNr ? 'Section Not Required' : (anyNr ? 'Mixed' : 'Section Required');
   }
 }
-
-// Custom Mods row builders
-window.addWizardCustomModRow = function() {
-  const container = document.getElementById('w-custom-mods-list');
-  const id = `mod-${Date.now()}`;
-
-  const html = `
-    <div class="custom-item-row" id="${id}" style="margin-top:10px;">
-      <div class="form-group mb-none">
-        <label>Modification Name</label>
-        <input type="text" class="form-control form-control-sm mod-name-input" placeholder="e.g. Extra Heavy Toolbox" required>
-      </div>
-      <div class="form-group mb-none">
-        <label>Qty</label>
-        <input type="number" class="form-control form-control-sm mod-qty-input" value="1" min="1" required>
-      </div>
-      <div class="form-group mb-none">
-        <label>Price (₹)</label>
-        <input type="number" class="form-control form-control-sm mod-price-input" placeholder="12000" min="0" required>
-      </div>
-      <button type="button" class="btn-remove-row" onclick="removeWizardCustomModRow('${id}')" style="margin-top:20px;">
-        <svg class="icon-sm" viewBox="0 0 24 24" style="width:14px;height:14px;"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-      </button>
-    </div>
-  `;
-  container.insertAdjacentHTML('beforeend', html);
-
-  const row = document.getElementById(id);
-  row.querySelectorAll('input').forEach(input => {
-    input.oninput = () => {
-      calculateWizardPricing();
-      simulateDraftAutoSave();
-    };
-  });
-};
-
-window.removeWizardCustomModRow = function(id) {
-  const row = document.getElementById(id);
-  if (row) {
-    row.remove();
-    calculateWizardPricing();
-    simulateDraftAutoSave();
-  }
-};
 
 // -------------------------------------------------------
 // CUSTOM ITEM SECTION MANAGEMENT (Add Item Feature)
@@ -2015,32 +1975,7 @@ function calculateWizardPricing() {
     });
   });
 
-  // Calculate Custom Mods
-  let modsTotal = 0;
-  let modsHtml = '';
-  wizardState.customMods = [];
-
-  const rows = document.querySelectorAll('#w-custom-mods-list .custom-item-row');
-  rows.forEach(row => {
-    const name = row.querySelector('.mod-name-input').value || 'Custom Modification';
-    const qty = parseInt(row.querySelector('.mod-qty-input').value, 10) || 1;
-    const price = parseFloat(row.querySelector('.mod-price-input').value) || 0;
-    const lineTotal = qty * price;
-
-    modsTotal += lineTotal;
-    wizardState.customMods.push({ name, qty, price });
-    
-    if (lineTotal > 0) {
-      modsHtml += `
-        <div class="preview-row indent">
-          <span>+ Modification: ${name} (x${qty})</span>
-          <span>₹${lineTotal.toLocaleString('en-IN')}</span>
-        </div>
-      `;
-    }
-  });
-
-  const basicAmount = basePrice + upgradesTotal + modsTotal;
+  const basicAmount = basePrice + upgradesTotal;
   const gstVal = Math.round(basicAmount * 0.18);
   const grandTotal = basicAmount + gstVal;
   
@@ -2059,11 +1994,6 @@ function calculateWizardPricing() {
       ${upgradesHtml ? `
         <div class="mb-xs mt-xs"><span style="font-size:0.7rem;color:var(--color-text-muted);text-transform:uppercase;">Technical Parameters Upgrades:</span></div>
         ${upgradesHtml}
-      ` : ''}
-
-      ${modsHtml ? `
-        <div class="mb-xs mt-xs"><span style="font-size:0.7rem;color:var(--color-text-muted);text-transform:uppercase;">Custom Modifications:</span></div>
-        ${modsHtml}
       ` : ''}
 
       <div class="preview-row mt-md" style="border-top: 1px dashed rgba(0,0,0,0.15); padding-top:10px;">
@@ -2178,16 +2108,6 @@ function generateQuotationFinalReview() {
     <div class="pdf-specs-item"><span style="font-weight:bold; min-width: 26px;">${count++}.</span><span>Overall Frame Width Dimension = ${widthVal}</span></div>
   `;
 
-  // Attach Custom accessories if added
-  wizardState.customMods.forEach(mod => {
-    specsListHtml += `
-      <div class="pdf-specs-item">
-        <span style="font-weight:bold; min-width: 26px;">${count++}.</span>
-        <span>Fitted Accessory = ${mod.name} (Qty: ${mod.qty})</span>
-      </div>
-    `;
-  });
-
   if (specsContainer) {
     specsContainer.innerHTML = specsListHtml;
   }
@@ -2247,8 +2167,7 @@ window.saveWizardQuotation = function() {
     date: c.date,
     total: wizardState.total,
     status: wizardState.status,
-    specs: wizardState.specs,
-    customItems: wizardState.customMods
+    specs: wizardState.specs
   });
 
   // 3. Save invoice if approved
@@ -2310,10 +2229,6 @@ window.convertWizardToWorkOrder = function() {
         specDetails.push(`[${section.name}] ${field.name}: ${displayVal}`);
       }
     });
-  });
-
-  wizardState.customMods.forEach(mod => {
-    specDetails.push(`Fitted Accessory: ${mod.name} (Qty: ${mod.qty})`);
   });
 
   STATE.workOrders.push({
